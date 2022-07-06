@@ -1,7 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 
 export default {
-  input: './viewer.js',
+  input: './client.js',
   output: [
     {
       format: 'esm',
