@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>BIM Viewer</title>
+</head>
+<body class="viewerPage">
+        <!-- Navigation Bar -->
+        <nav class="navbar-expand-md navbar-dark bg-dark">
+            <div class="container-fluid">
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="./index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.buildingsmart.org/about/openbim/openbim-definition/">What is OpenBIM?</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://ifcjs.github.io/info/">IFC.js</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.buildingsmart.org/standards/bsi-standards/industry-foundation-classes/">What is IFC?</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://ifcjs.github.io/info/docs/Courses/Getting-started#learn-bim-development-with-us">BIM Development Course</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Viewer Section-->
+        <div class="container">
+            <div class="row viewerSection">
+                <!-- Viewer -->
+                <div id="viewer-container" class="bimViewer col-12 col-md-9 col-lg-9 col-xxl-9 py-3"></div>
+
+                <!-- left Menu -->
+                <div class="col-12 col-md-3 col-lg-3 col-xxl-3">
+                    <ul class="projectList">
+                        <button class="projectShortcut" id="ps1" onclick="ProjectShortcut(this.id)">Project nº1</button>
+                        <button class="projectShortcut" id="ps2" onclick="ProjectShortcut(this.id)">Project nº2</button>
+                        <button class="projectShortcut" id="ps3" onclick="ProjectShortcut(this.id)">Project nº3</button>
+                        <button class="projectShortcut" id="ps4" onclick="ProjectShortcut(this.id)">Project nº4</button>
+                        <button class="projectShortcut" id="ps5" onclick="ProjectShortcut(this.id)">Project nº5</button>
+                        <button class="projectShortcut" id="ps6" onclick="ProjectShortcut(this.id)">Project nº6</button>
+                        <button class="projectShortcut" id="ps7" onclick="ProjectShortcut(this.id)">Project nº7</button>
+                        <button class="projectShortcut" id="ps8" onclick="ProjectShortcut(this.id)">Project nº8</button>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    <footer>
+        <div class="footerSection">
+            <h6 class="footerText"">For more information: </h6>
+            <div class="footerButtons">
+                <a class="footerBtn" href="www.linkedin.com/in/ouahbi">Facebook</a>
+                <a class="footerBtn" href="https://www.linkedin.com/in/ouahbi/">Linkedin</a>
+                <a class="footerBtn" href="www.linkedin.com/in/ouahbi">Instagram</a>
+                <a class="footerBtn" href="www.linkedin.com/in/ouahbi">Twitter</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./projects.js"></script>
+    <script src="./bundle.js"></script>
+</body>
+</html>

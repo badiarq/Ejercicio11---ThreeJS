@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@100;400;600;800&display=swap');
+
+:root {
+    --coverHeight: 14rem;
+    --coverMargin: 1rem;
+    --listMargin: 0.4rem;
+    --coverRadius: 0.7rem;
+    --coverPadding: 1.5rem;
+    --backgroundColor: rgb(250, 250, 250);
+    --titleSize: 1.4rem;
+    --principalColor: #d9d5e7;
+    --secondaryColor: #e7a377;
+    --darkColor: #212529;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+body {
+    font-family: 'Jost', 'Helvetica', 'Arial', sans-serif;
+    background-color: var(--darkColor);
+}
+
+.cardsGrid {
+    background-color: rgb(232, 232, 232);
+    margin: var(--coverMargin), var(--coverMargin);
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+.container {
+    margin-top: var(--coverMargin);
+}
+
+.projectCard {
+    position: relative;
+    overflow: hidden;
+}
+
+.projectCard a {
+    display: block;
+}
+
+.projectCard img {
+    z-index: 1;
+    height: var(--coverHeight);
+    width: 100%;
+    border-radius: var(--coverRadius);
+    object-fit: cover;
+}
+
+.projectCard .imageCard {
+    transition: all .5s ease-out;
+}
+
+.projectCard:hover .imageCard {
+    transform: scale(1.1);
+    -webkit-transform: scale(1.1);
+    cursor: pointer;
+    border-radius: var(--coverRadius);
+}
+
+.cardTitle:hover{
+    cursor: pointer;
+}
+
+.projectCard .cardBody {
+    padding: 1.5rem 2rem;
+    z-index: 10;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    transition: all .5s ease-in-out;
+    transform: translateY(40px);
+}
+
+.projectCard:hover .cardBody {
+    animation: slide-in-bottom 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+} 
+
+.projectCard .cardTitle {
+    color: rgb(240, 240, 240);
+}   
+
+.projectCard .projectDescription {
+    font-size: 0.813rem;
+    line-height: 1.5em;
+    color: #fff;
+    opacity: 0;
+    transition: all .2s ease-in-out;
+}   
+
+.projectCard:hover .projectDescription {
+    opacity: 1;
+}
+
+@keyframes slide-in-bottom {
+    0% {
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+    100% {
+        -webkit-transform: translateY(-18px);
+        transform: translateY(-18px);
+    }
+}
+
+.projectCard .shadow {
+    z-index: 5;
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    border-radius: var(--coverRadius);
+    bottom: 0;
+    background: -moz-linear-gradient(top,  rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%);
+    background: -webkit-linear-gradient(top,  rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%);
+    background: linear-gradient(to bottom,  rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', endColorstr='#a6000000',GradientType=0 );
+}
+
+.shadow {
+    cursor: pointer;
+}
+
+.viewerPage {
+    background-color: var(--backgroundColor)
+}
+
+.bimViewer {
+    display: flex;
+    flex-direction: row;
+    justify-content:space-evenly;
+    margin-top: var(--coverMargin);
+    margin-bottom: var(--coverMargin);
+}
+
+.viewerSection .bimViewer {
+    /* width: 100vw; */
+    height: 70vh;
+    overflow: hidden;
+    border-radius: var(--coverRadius);
+    background-color:rgb(238, 238, 238);
+}
+
+.projectList {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2rem;
+}
+
+.projectShortcut {
+    margin: var(--listMargin);
+    border-radius: var(--coverRadius);
+    background-color: var(--principalColor);
+}
+
+.projectShortcut:hover {
+    background-color: var(--secondaryColor);
+}
+
+.footerSection {
+    background-color: var(--darkColor);
+}
+
+.footerButtons {
+    display: flex;
+    justify-content: space-evenly;
+    padding-bottom: var(--coverPadding);
+    border-radius: var(--coverRadius);
+}
+
+.footerBtn {
+    border-radius: var(--coverRadius);
+    border: none;
+    background-color: var(--principalColor);
+    padding: 10px 10px;
+    cursor: pointer;
+    color: var(--darkColor);
+    outline: none;
+    margin-right: 10px;
+    margin-bottom: 20px;
+    width: 10rem;
+    text-align: center;
+    text-decoration: none;
+}
+
+.footerBtn:hover {
+    background-color: var(--secondaryColor);
+    color: var(--darkColor);
+    transform: scale(1.05);
+    transition: all 0.5s ease-out;
+}
+
+.footerText {
+    color: var(--secondaryColor);
+    margin-top: var(--coverMargin);
+    padding: var(--coverPadding);
+}
