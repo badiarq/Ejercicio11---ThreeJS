@@ -215,7 +215,13 @@ body {
     justify-content: center;
     background-color: black;
     opacity: 0.8;
+    color: white;
+    flex-direction: column;
 }
+
+#loader-container * {
+    margin: 0.5rem;
+}   
 
 .loader {
     width: 60px;

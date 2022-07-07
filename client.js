@@ -260,29 +260,34 @@ import {
     
         const loader = new GLTFLoader();
         
-        // Create a loader symbol
+        // Get the loader symbol from html
         const loadingScreen = document.getElementById('loader-container');
+        // Get the loader text from html
+        const progressText = document.getElementById('progress-text');
 
         // Load the file
         loader.load( '/Items/house/scene.gltf',
 
-        (gltf) => {
-            // Modify the position of the Geometry
-                gltf.scene.position.x = -55;
-                gltf.scene.position.y = -13;
-                gltf.scene.position.z = -37;
-            // Add position controls to the GUI
-                HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 5)
-                HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 5)
-                HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 5)
-            // Add the Geometry to the scene
-                scene.add(gltf.scene);
-            // Add the loader symbol
-                loadingScreen.classList.add('hidden');
-        },
-        (progress) => {
-            console.log(progress);
-        },
-        (error) => {
-            console.log(error);
-        })
+            (gltf) => {
+                // Modify the position of the Geometry
+                    gltf.scene.position.x = -55;
+                    gltf.scene.position.y = -13;
+                    gltf.scene.position.z = -37;
+                // Add position controls to the GUI
+                    HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 5)
+                    HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 5)
+                    HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 5)
+                // Add the Geometry to the scene
+                    scene.add(gltf.scene);
+                // Add the loader symbol
+                    loadingScreen.classList.add('hidden');
+            },
+            (progress) => {
+                console.log(progress);
+                const progressPercent = progress.loaded / progress.total * 100;
+                const formatted = Math.trunc(progressPercent); // Remove the decimals
+                progressText.textContent = `Loading: ${formatted} %`;
+            },
+            (error) => {
+                console.log(error);
+            })
