@@ -264,7 +264,13 @@ import {
         const HousePositionFolder = HouseFolder.addFolder('Position')
 
     // 11.2 Load the GLTF File
+    
         const loader = new GLTFLoader();
+        
+        // Create a loader symbol
+        const loadingScreen = document.getElementById('loader-container');
+
+        // Load the file
         loader.load( '/Items/house/scene.gltf',
 
         (gltf) => {
@@ -278,6 +284,8 @@ import {
                 HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 5)
             // Add the Geometry to the scene
                 scene.add(gltf.scene);
+            // Add the loader symbol
+                loadingScreen.classList.add('hidden');
         },
         (progress) => {
             console.log(progress);
