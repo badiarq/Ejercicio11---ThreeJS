@@ -113,28 +113,26 @@ import {
         const wireframeBox = new LineSegments(edgesGeometry, edgesMaterial);
         wireframeBox.position.x = -2;
         scene.add(wireframeBox);
-  
+
+
+
 // 3 The Camera
+
+    // 3.1 Create the camera
     const camera = new PerspectiveCamera(
         75,
         canvas.clientWidth / canvas.clientHeight
     );
 
-    camera.position.z = 10; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
-    camera.position.y = 5;
-    camera.position.x = 0;
+    // 3.2 Camera Controls
+    CameraControls.install( { THREE: subsetOfTHREE } ); 
+    const clock = new Clock();
+    const cameraControls = new CameraControls(camera, canvas);
 
-    // // Create a vector
-    // const vectorA = new THREE.Vector3( 25, 0, 0 );
-    // const vectorB = new THREE.Vector3( 20, 5, 0 );
-    // const vectorC = new THREE.Vector3();
-    // vectorC.addVectors( vectorA, vectorB );
+    // 3.3 Set camera position (x, y , z) + camera target (x, y, z)
+    cameraControls.setLookAt(25, 6, 15, 20, 0, 3);
 
-    // LookAt the Vector
-    // camera.lookAt(vectorC);
-    camera.lookAt(axes.position);
-
-    // Add the camera to the scene
+    // 3.4 Add the camera to the scene
     scene.add(camera);
   
 // 4 The Renderer
@@ -168,12 +166,7 @@ import {
         renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     });
 
-// 7 Controls
-    CameraControls.install( { THREE: subsetOfTHREE } ); 
-    const clock = new Clock();
-    const cameraControls = new CameraControls(camera, canvas);
-
-// 8 Animate
+// 7 Animate
   
     function animate() {
         const delta = clock.getDelta();
@@ -183,14 +176,14 @@ import {
     }
     animate();
 
-// 9 Grid
+// 8 Grid
 
     const grid = new THREE.GridHelper();
     grid.material.depthTest = false;
     // grid.renderOrder = 1;
     scene.add(grid);
 
-// 10 Load the Dat.GUI Panel
+// 9 Load the Dat.GUI Panel
     const gui = new GUI()
     //Add a folder for manipulating options
     const cubeFolder = gui.addFolder('Cube')
@@ -252,9 +245,9 @@ import {
     //To open the tabs by default:
     cameraFolder.open()
 
-// 11 Add GLTF file to the scene
+// 10 Add GLTF file to the scene
 
-    // 11.1 (optional) Add GUI controls for the GLTF File
+    // 10.1 (optional) Add GUI controls for the GLTF File
         const guiHouse = new GUI()
         //Add a folder for manipulating options
         const HouseFolder = guiHouse.addFolder('House')
@@ -263,7 +256,7 @@ import {
         //Add a folder conatining 3 rotation panels [x, y, z]
         const HousePositionFolder = HouseFolder.addFolder('Position')
 
-    // 11.2 Load the GLTF File
+    // 10.2 Load the GLTF File
     
         const loader = new GLTFLoader();
         
