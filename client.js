@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import Stats from 'three/examples/jsm/libs/stats.module'
 //Import Dat.GUI Panel to be able to manipulate a 3D object directly in the page
 import { GUI } from 'dat.gui'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {
     Scene,
     BoxGeometry,
@@ -118,10 +119,22 @@ import {
         75,
         canvas.clientWidth / canvas.clientHeight
     );
-    camera.position.z = 4; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
-    camera.position.y = 3;
-    camera.position.x = 3;
+
+    camera.position.z = 10; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
+    camera.position.y = 5;
+    camera.position.x = 0;
+
+    // // Create a vector
+    // const vectorA = new THREE.Vector3( 25, 0, 0 );
+    // const vectorB = new THREE.Vector3( 20, 5, 0 );
+    // const vectorC = new THREE.Vector3();
+    // vectorC.addVectors( vectorA, vectorB );
+
+    // LookAt the Vector
+    // camera.lookAt(vectorC);
     camera.lookAt(axes.position);
+
+    // Add the camera to the scene
     scene.add(camera);
   
 // 4 The Renderer
@@ -174,7 +187,7 @@ import {
 
     const grid = new THREE.GridHelper();
     grid.material.depthTest = false;
-    grid.renderOrder = 1;
+    // grid.renderOrder = 1;
     scene.add(grid);
 
 // 10 Load the Dat.GUI Panel
@@ -238,3 +251,37 @@ import {
     cameraFolder.add(camera.position, 'z', 0, 10)
     //To open the tabs by default:
     cameraFolder.open()
+
+// 11 Add GLTF file to the scene
+
+    // 11.1 (optional) Add GUI controls for the GLTF File
+        const guiHouse = new GUI()
+        //Add a folder for manipulating options
+        const HouseFolder = guiHouse.addFolder('House')
+        //Load cubeFolder section
+        HouseFolder.open()
+        //Add a folder conatining 3 rotation panels [x, y, z]
+        const HousePositionFolder = HouseFolder.addFolder('Position')
+
+    // 11.2 Load the GLTF File
+        const loader = new GLTFLoader();
+        loader.load( '/Items/house/scene.gltf',
+
+        (gltf) => {
+            // Modify the position of the Geometry
+                gltf.scene.position.x = -55;
+                gltf.scene.position.y = -13;
+                gltf.scene.position.z = -37;
+            // Add position controls to the GUI
+                HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 5)
+                HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 5)
+                HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 5)
+            // Add the Geometry to the scene
+                scene.add(gltf.scene);
+        },
+        (progress) => {
+            console.log(progress);
+        },
+        (error) => {
+            console.log(error);
+        })
