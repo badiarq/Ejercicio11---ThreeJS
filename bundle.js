@@ -28549,6 +28549,120 @@ class LineSegments extends Line {
 
 }
 
+class MeshPhongMaterial extends Material {
+
+	constructor( parameters ) {
+
+		super();
+
+		this.isMeshPhongMaterial = true;
+
+		this.type = 'MeshPhongMaterial';
+
+		this.color = new Color$1( 0xffffff ); // diffuse
+		this.specular = new Color$1( 0x111111 );
+		this.shininess = 30;
+
+		this.map = null;
+
+		this.lightMap = null;
+		this.lightMapIntensity = 1.0;
+
+		this.aoMap = null;
+		this.aoMapIntensity = 1.0;
+
+		this.emissive = new Color$1( 0x000000 );
+		this.emissiveIntensity = 1.0;
+		this.emissiveMap = null;
+
+		this.bumpMap = null;
+		this.bumpScale = 1;
+
+		this.normalMap = null;
+		this.normalMapType = TangentSpaceNormalMap;
+		this.normalScale = new Vector2( 1, 1 );
+
+		this.displacementMap = null;
+		this.displacementScale = 1;
+		this.displacementBias = 0;
+
+		this.specularMap = null;
+
+		this.alphaMap = null;
+
+		this.envMap = null;
+		this.combine = MultiplyOperation;
+		this.reflectivity = 1;
+		this.refractionRatio = 0.98;
+
+		this.wireframe = false;
+		this.wireframeLinewidth = 1;
+		this.wireframeLinecap = 'round';
+		this.wireframeLinejoin = 'round';
+
+		this.flatShading = false;
+
+		this.fog = true;
+
+		this.setValues( parameters );
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.color.copy( source.color );
+		this.specular.copy( source.specular );
+		this.shininess = source.shininess;
+
+		this.map = source.map;
+
+		this.lightMap = source.lightMap;
+		this.lightMapIntensity = source.lightMapIntensity;
+
+		this.aoMap = source.aoMap;
+		this.aoMapIntensity = source.aoMapIntensity;
+
+		this.emissive.copy( source.emissive );
+		this.emissiveMap = source.emissiveMap;
+		this.emissiveIntensity = source.emissiveIntensity;
+
+		this.bumpMap = source.bumpMap;
+		this.bumpScale = source.bumpScale;
+
+		this.normalMap = source.normalMap;
+		this.normalMapType = source.normalMapType;
+		this.normalScale.copy( source.normalScale );
+
+		this.displacementMap = source.displacementMap;
+		this.displacementScale = source.displacementScale;
+		this.displacementBias = source.displacementBias;
+
+		this.specularMap = source.specularMap;
+
+		this.alphaMap = source.alphaMap;
+
+		this.envMap = source.envMap;
+		this.combine = source.combine;
+		this.reflectivity = source.reflectivity;
+		this.refractionRatio = source.refractionRatio;
+
+		this.wireframe = source.wireframe;
+		this.wireframeLinewidth = source.wireframeLinewidth;
+		this.wireframeLinecap = source.wireframeLinecap;
+		this.wireframeLinejoin = source.wireframeLinejoin;
+
+		this.flatShading = source.flatShading;
+
+		this.fog = source.fog;
+
+		return this;
+
+	}
+
+}
+
 class MeshNormalMaterial extends Material {
 
 	constructor( parameters ) {
@@ -28600,6 +28714,265 @@ class MeshNormalMaterial extends Material {
 		this.flatShading = source.flatShading;
 
 		return this;
+
+	}
+
+}
+
+class Light extends Object3D {
+
+	constructor( color, intensity = 1 ) {
+
+		super();
+
+		this.isLight = true;
+
+		this.type = 'Light';
+
+		this.color = new Color$1( color );
+		this.intensity = intensity;
+
+	}
+
+	dispose() {
+
+		// Empty here in base class; some subclasses override.
+
+	}
+
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		this.color.copy( source.color );
+		this.intensity = source.intensity;
+
+		return this;
+
+	}
+
+	toJSON( meta ) {
+
+		const data = super.toJSON( meta );
+
+		data.object.color = this.color.getHex();
+		data.object.intensity = this.intensity;
+
+		if ( this.groundColor !== undefined ) data.object.groundColor = this.groundColor.getHex();
+
+		if ( this.distance !== undefined ) data.object.distance = this.distance;
+		if ( this.angle !== undefined ) data.object.angle = this.angle;
+		if ( this.decay !== undefined ) data.object.decay = this.decay;
+		if ( this.penumbra !== undefined ) data.object.penumbra = this.penumbra;
+
+		if ( this.shadow !== undefined ) data.object.shadow = this.shadow.toJSON();
+
+		return data;
+
+	}
+
+}
+
+const _projScreenMatrix$1 = /*@__PURE__*/ new Matrix4();
+const _lightPositionWorld$1 = /*@__PURE__*/ new Vector3();
+const _lookTarget$1 = /*@__PURE__*/ new Vector3();
+
+class LightShadow {
+
+	constructor( camera ) {
+
+		this.camera = camera;
+
+		this.bias = 0;
+		this.normalBias = 0;
+		this.radius = 1;
+		this.blurSamples = 8;
+
+		this.mapSize = new Vector2( 512, 512 );
+
+		this.map = null;
+		this.mapPass = null;
+		this.matrix = new Matrix4();
+
+		this.autoUpdate = true;
+		this.needsUpdate = false;
+
+		this._frustum = new Frustum();
+		this._frameExtents = new Vector2( 1, 1 );
+
+		this._viewportCount = 1;
+
+		this._viewports = [
+
+			new Vector4( 0, 0, 1, 1 )
+
+		];
+
+	}
+
+	getViewportCount() {
+
+		return this._viewportCount;
+
+	}
+
+	getFrustum() {
+
+		return this._frustum;
+
+	}
+
+	updateMatrices( light ) {
+
+		const shadowCamera = this.camera;
+		const shadowMatrix = this.matrix;
+
+		_lightPositionWorld$1.setFromMatrixPosition( light.matrixWorld );
+		shadowCamera.position.copy( _lightPositionWorld$1 );
+
+		_lookTarget$1.setFromMatrixPosition( light.target.matrixWorld );
+		shadowCamera.lookAt( _lookTarget$1 );
+		shadowCamera.updateMatrixWorld();
+
+		_projScreenMatrix$1.multiplyMatrices( shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse );
+		this._frustum.setFromProjectionMatrix( _projScreenMatrix$1 );
+
+		shadowMatrix.set(
+			0.5, 0.0, 0.0, 0.5,
+			0.0, 0.5, 0.0, 0.5,
+			0.0, 0.0, 0.5, 0.5,
+			0.0, 0.0, 0.0, 1.0
+		);
+
+		shadowMatrix.multiply( shadowCamera.projectionMatrix );
+		shadowMatrix.multiply( shadowCamera.matrixWorldInverse );
+
+	}
+
+	getViewport( viewportIndex ) {
+
+		return this._viewports[ viewportIndex ];
+
+	}
+
+	getFrameExtents() {
+
+		return this._frameExtents;
+
+	}
+
+	dispose() {
+
+		if ( this.map ) {
+
+			this.map.dispose();
+
+		}
+
+		if ( this.mapPass ) {
+
+			this.mapPass.dispose();
+
+		}
+
+	}
+
+	copy( source ) {
+
+		this.camera = source.camera.clone();
+
+		this.bias = source.bias;
+		this.radius = source.radius;
+
+		this.mapSize.copy( source.mapSize );
+
+		return this;
+
+	}
+
+	clone() {
+
+		return new this.constructor().copy( this );
+
+	}
+
+	toJSON() {
+
+		const object = {};
+
+		if ( this.bias !== 0 ) object.bias = this.bias;
+		if ( this.normalBias !== 0 ) object.normalBias = this.normalBias;
+		if ( this.radius !== 1 ) object.radius = this.radius;
+		if ( this.mapSize.x !== 512 || this.mapSize.y !== 512 ) object.mapSize = this.mapSize.toArray();
+
+		object.camera = this.camera.toJSON( false ).object;
+		delete object.camera.matrix;
+
+		return object;
+
+	}
+
+}
+
+class DirectionalLightShadow extends LightShadow {
+
+	constructor() {
+
+		super( new OrthographicCamera( - 5, 5, 5, - 5, 0.5, 500 ) );
+
+		this.isDirectionalLightShadow = true;
+
+	}
+
+}
+
+class DirectionalLight extends Light {
+
+	constructor( color, intensity ) {
+
+		super( color, intensity );
+
+		this.isDirectionalLight = true;
+
+		this.type = 'DirectionalLight';
+
+		this.position.copy( Object3D.DefaultUp );
+		this.updateMatrix();
+
+		this.target = new Object3D();
+
+		this.shadow = new DirectionalLightShadow();
+
+	}
+
+	dispose() {
+
+		this.shadow.dispose();
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.target = source.target.clone();
+		this.shadow = source.shadow.clone();
+
+		return this;
+
+	}
+
+}
+
+class AmbientLight extends Light {
+
+	constructor( color, intensity ) {
+
+		super( color, intensity );
+
+		this.isAmbientLight = true;
+
+		this.type = 'AmbientLight';
 
 	}
 
@@ -28862,6 +29235,47 @@ class Spherical {
 	clone() {
 
 		return new this.constructor().copy( this );
+
+	}
+
+}
+
+class GridHelper extends LineSegments {
+
+	constructor( size = 10, divisions = 10, color1 = 0x444444, color2 = 0x888888 ) {
+
+		color1 = new Color$1( color1 );
+		color2 = new Color$1( color2 );
+
+		const center = divisions / 2;
+		const step = size / divisions;
+		const halfSize = size / 2;
+
+		const vertices = [], colors = [];
+
+		for ( let i = 0, j = 0, k = - halfSize; i <= divisions; i ++, k += step ) {
+
+			vertices.push( - halfSize, 0, k, halfSize, 0, k );
+			vertices.push( k, 0, - halfSize, k, 0, halfSize );
+
+			const color = i === center ? color1 : color2;
+
+			color.toArray( colors, j ); j += 3;
+			color.toArray( colors, j ); j += 3;
+			color.toArray( colors, j ); j += 3;
+			color.toArray( colors, j ); j += 3;
+
+		}
+
+		const geometry = new BufferGeometry();
+		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+
+		const material = new LineBasicMaterial( { vertexColors: true, toneMapped: false } );
+
+		super( geometry, material );
+
+		this.type = 'GridHelper';
 
 	}
 
@@ -33523,63 +33937,101 @@ const subsetOfTHREE = {
     // Give a color to the scene
   scene.background = new Color$1(0xdedeee);
     //Load Axes for the scene
-  scene.add(new AxesHelper(5));
+    const axes = new AxesHelper(5);
+    axes.renderOrder = 2;
+    scene.add(axes);
   
   //2 The Object
 
-//   const geometry = new BoxGeometry(0.5, 0.5, 0.5);
-//   const material = new MeshBasicMaterial({ color: "orange" });
-//   const cubeMesh = new Mesh(geometry, material);
-//   scene.add(cubeMesh);
+    //   const geometry = new BoxGeometry(0.5, 0.5, 0.5);
+    //   const material = new MeshBasicMaterial({ color: "orange" });
+    //   const cubeMesh = new Mesh(geometry, material);
+    //   scene.add(cubeMesh);
 
-//Define a BOX Geometry
-const geometry = new BoxGeometry();
-//Define the box materials
-const material = new MeshBasicMaterial({
-    color: 0xcccccc,
-    wireframe: true,
-});
+    //Define a BOX Geometry
+    const geometry = new BoxGeometry();
+    //Define the box materials
+    const material = new MeshBasicMaterial({
+        color: 0xcccccc,
+        wireframe: true,
+    });
 
-//Create a BOX from the defined elements
-const cube = new Mesh(geometry, material);
-//Add the BOX to the scene to be able to see it
+    //Create a BOX from the defined elements
+    const cube = new Mesh(geometry, material);
 
-//Create a box surface geometry
-const surfacegeometry = new BoxGeometry();
-//Create a material for the surface box
-const surfacematerial = new MeshNormalMaterial({
-    transparent: true,
-    opacity: 0.5,
-});
-//Create the surface Cube componed from the geometry+material
-const surfaceCube = new Mesh(surfacegeometry, surfacematerial);
-//Add the surfaceCube as a child of the first Cube created on top
-cube.add(surfaceCube);
+    //Create a box surface geometry
+    const surfacegeometry = new BoxGeometry();
+    //Create a material for the surface box
+    const surfacematerial = new MeshNormalMaterial({
+        transparent: true,
+        opacity: 0.5,
+    });
+    //Create the surface Cube componed from the geometry+material
+    const surfaceCube = new Mesh(surfacegeometry, surfacematerial);
+    //Add the surfaceCube as a child of the first Cube created on top
+    cube.add(surfaceCube);
 
-scene.add(cube);
+    //Add the BOX to the scene to be able to see it
+    scene.add(cube);
+
+// Create a second box
+    //Define a Phong Material
+    const PhongMaterial = new MeshPhongMaterial({
+        color: 0xff00ff,
+        specular: 0xffffff,
+        shininess: 100,
+        flatShading: true,
+    });
+    //Create a Phong Cube
+    const PhongCube = new Mesh(geometry, PhongMaterial);
+    //Move the Phong Cube
+    PhongCube.position.x = 2;
+    //Add the Phong Cube to the scene to be able to see it
+    scene.add(PhongCube);
   
-  //3 The Camera
+// 3 The Camera
   const camera = new PerspectiveCamera(
     75,
     canvas.clientWidth / canvas.clientHeight
   );
-  camera.position.z = 3; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
+  camera.position.z = 4; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
+  camera.position.y = 3;
+  camera.position.x = 3;
+  camera.lookAt(axes.position);
   scene.add(camera);
   
-  //4 The Renderer
+//4 The Renderer
+
   const renderer = new WebGLRenderer({
     canvas: canvas,
   });
   
   renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
   
+// 5 Lights
+  
+  const ambientLight = new AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const light1 = new DirectionalLight();
+  light1.position.set(2,1,3).normalize();
+  scene.add(light1);
+
+  const light2 = new DirectionalLight();
+  light2.position.set(-3,2,-1).normalize();
+  scene.add(light2);
+
+// 6 Responsivity
+
   window.addEventListener("resize", () => {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
   });
-  
-  // 5 Controls
+
+// 7 Controls
   CameraControls.install( { THREE: subsetOfTHREE } ); 
   const clock = new Clock();
   const cameraControls = new CameraControls(camera, canvas);
@@ -33593,65 +34045,71 @@ scene.add(cube);
   
   animate();
 
+  // 8 Grid
 
-  // 8 Load the Dat.GUI Panel
-const gui = new GUI$1();
-//Add a folder for manipulating options
-const cubeFolder = gui.addFolder('Cube');
-//Load cubeFolder section
-cubeFolder.open();
-//Add a folder conatining 3 rotation panels [x, y, z]
-const cubeRotationFolder = cubeFolder.addFolder('Rotation');
-cubeRotationFolder.add(cube.rotation, 'x', 0, Math.PI * 2);
-cubeRotationFolder.add(cube.rotation, 'y', 0, Math.PI * 2);
-cubeRotationFolder.add(cube.rotation, 'z', 0, Math.PI * 2);
-//Load cubeRotation panels
-cubeRotationFolder.open();
-//Add a folder conatining 3 positions panels [x, y, z] (axe, min, max, step)
-const cubePositionFolder = cubeFolder.addFolder('Position');
-cubePositionFolder.add(cube.position, 'x', -10, 10, 0.1);
-cubePositionFolder.add(cube.position, 'y', -10, 10, 0.1);
-cubePositionFolder.add(cube.position, 'z', -10, 10, 0.1);
-//Load cubePosition panels
-cubePositionFolder.open();
-//Add a folder conatining 3 positions panels [x, y, z] (axe, min, max)
-const cubeScaleFolder = cubeFolder.addFolder('Scale');
-cubeScaleFolder.add(cube.scale, 'x', -5, 5);
-cubeScaleFolder.add(cube.scale, 'y', -5, 5);
-cubeScaleFolder.add(cube.scale, 'z', -5, 5);
-//Add a boolean option to show/hide the cube geometry
-cubeFolder.add(cube, 'visible');
-//Load cubeScale panels
-cubeScaleFolder.open();
-//Create a transparency section
-const TransparencyFolder = cubeFolder.addFolder('Transparent');
-//Add a transparent option as a panel
-TransparencyFolder.add(surfacematerial, 'transparent');
-//Add an opacity panel
-TransparencyFolder.add(surfacematerial, 'opacity', 0, 1, 0.01);
-// Load cubeFolder section
-TransparencyFolder.open();
-//Declare the different options we want to have for the Side Panel
-//A BackSide option will allows us to see the interior of the box from the outside
-const options = {
-    side: {
-        "FrontSide": FrontSide,
-        "BackSide": BackSide,
-        "DoubleSide": DoubleSide,
+    const grid = new GridHelper();
+    grid.material.depthTest = false;
+    grid.renderOrder = 1;
+    scene.add(grid);
+
+// 9 Load the Dat.GUI Panel
+    const gui = new GUI$1();
+    //Add a folder for manipulating options
+    const cubeFolder = gui.addFolder('Cube');
+    //Load cubeFolder section
+    cubeFolder.open();
+    //Add a folder conatining 3 rotation panels [x, y, z]
+    const cubeRotationFolder = cubeFolder.addFolder('Rotation');
+    cubeRotationFolder.add(cube.rotation, 'x', 0, Math.PI * 2);
+    cubeRotationFolder.add(cube.rotation, 'y', 0, Math.PI * 2);
+    cubeRotationFolder.add(cube.rotation, 'z', 0, Math.PI * 2);
+    //Load cubeRotation panels
+    cubeRotationFolder.open();
+    //Add a folder conatining 3 positions panels [x, y, z] (axe, min, max, step)
+    const cubePositionFolder = cubeFolder.addFolder('Position');
+    cubePositionFolder.add(cube.position, 'x', -10, 10, 0.1);
+    cubePositionFolder.add(cube.position, 'y', -10, 10, 0.1);
+    cubePositionFolder.add(cube.position, 'z', -10, 10, 0.1);
+    //Load cubePosition panels
+    cubePositionFolder.open();
+    //Add a folder conatining 3 positions panels [x, y, z] (axe, min, max)
+    const cubeScaleFolder = cubeFolder.addFolder('Scale');
+    cubeScaleFolder.add(cube.scale, 'x', -5, 5);
+    cubeScaleFolder.add(cube.scale, 'y', -5, 5);
+    cubeScaleFolder.add(cube.scale, 'z', -5, 5);
+    //Add a boolean option to show/hide the cube geometry
+    cubeFolder.add(cube, 'visible');
+    //Load cubeScale panels
+    cubeScaleFolder.open();
+    //Create a transparency section
+    const TransparencyFolder = cubeFolder.addFolder('Transparent');
+    //Add a transparent option as a panel
+    TransparencyFolder.add(surfacematerial, 'transparent');
+    //Add an opacity panel
+    TransparencyFolder.add(surfacematerial, 'opacity', 0, 1, 0.01);
+    // Load cubeFolder section
+    TransparencyFolder.open();
+    //Declare the different options we want to have for the Side Panel
+    //A BackSide option will allows us to see the interior of the box from the outside
+    const options = {
+        side: {
+            "FrontSide": FrontSide,
+            "BackSide": BackSide,
+            "DoubleSide": DoubleSide,
+        }
+    };
+    //Add the options to the panel
+    TransparencyFolder.add(surfacematerial, 'side', options.side).onChange(() => updateMaterial());
+    //Run a fonction so the side option can work correctly
+    function updateMaterial(){
+        //convert the side option into a number (it won't work if it's a string)
+        surfacematerial.side = Number(surfacematerial.side);
+        //update when charging WebGL
+        material.needsUpdate = true;
     }
-};
-//Add the options to the panel
-TransparencyFolder.add(surfacematerial, 'side', options.side).onChange(() => updateMaterial());
-//Run a fonction so the side option can work correctly
-function updateMaterial(){
-    //convert the side option into a number (it won't work if it's a string)
-    surfacematerial.side = Number(surfacematerial.side);
-    //update when charging WebGL
-    material.needsUpdate = true;
-}
 
-//Add a camera distance panel
-const cameraFolder = gui.addFolder('Camera');
-cameraFolder.add(camera.position, 'z', 0, 10);
-//To open the tabs by default:
-cameraFolder.open();
+    //Add a camera distance panel
+    const cameraFolder = gui.addFolder('Camera');
+    cameraFolder.add(camera.position, 'z', 0, 10);
+    //To open the tabs by default:
+    cameraFolder.open();
