@@ -291,3 +291,67 @@ import {
             (error) => {
                 console.log(error);
             })
+
+// Picking
+
+    // Objects we want to pick
+    const objectsToPick = [cube, PhongCube, wireframeBox];
+
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
+
+    // Previous Selection
+    const previousSelection = {
+        mesh : null,
+        material: null
+    }
+
+    // Create a material to highlight the selected object
+        const highlightMat = new MeshBasicMaterial({
+            color: 'red',
+            transparent: true,
+            opacity: 0.75,
+        });
+
+    // Get Mouse position
+    window.addEventListener('mousemove', (event) => {
+        mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
+        mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+
+    // Picking
+        raycaster.setFromCamera(mouse, camera);
+        const intersections = raycaster.intersectObjects(objectsToPick);
+        
+        // intersection between mouse and material
+        const hasCollided = intersections.length !== 0 ;
+
+        // if there is an intersection than highlight the material
+        if(!hasCollided) {
+            restorePreviousSelection();
+            return;
+        }
+
+        const firstIntersection = intersections[0];
+
+        const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
+        if(isPreviousSelection) return; 
+
+        restorePreviousSelection();
+
+        savePreviousSelction(firstIntersection);
+
+        firstIntersection.object.material = highlightMat;
+    })
+
+    function savePreviousSelction(item) {
+        previousSelection.mesh = item.object;
+        previousSelection.material = item.object.material;
+    }
+
+    function restorePreviousSelection() {
+        if(previousSelection.mesh) {
+            previousSelection.mesh.material = previousSelection.material;
+            previousSelection.mesh = null;
+            previousSelection.material = null;
+        }
+    }
