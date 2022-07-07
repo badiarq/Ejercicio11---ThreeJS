@@ -28549,6 +28549,140 @@ class LineSegments extends Line {
 
 }
 
+const _v0 = /*@__PURE__*/ new Vector3();
+const _v1$1 = /*@__PURE__*/ new Vector3();
+const _normal = /*@__PURE__*/ new Vector3();
+const _triangle = /*@__PURE__*/ new Triangle();
+
+class EdgesGeometry extends BufferGeometry {
+
+	constructor( geometry = null, thresholdAngle = 1 ) {
+
+		super();
+		this.type = 'EdgesGeometry';
+
+		this.parameters = {
+			geometry: geometry,
+			thresholdAngle: thresholdAngle
+		};
+
+		if ( geometry !== null ) {
+
+			const precisionPoints = 4;
+			const precision = Math.pow( 10, precisionPoints );
+			const thresholdDot = Math.cos( DEG2RAD * thresholdAngle );
+
+			const indexAttr = geometry.getIndex();
+			const positionAttr = geometry.getAttribute( 'position' );
+			const indexCount = indexAttr ? indexAttr.count : positionAttr.count;
+
+			const indexArr = [ 0, 0, 0 ];
+			const vertKeys = [ 'a', 'b', 'c' ];
+			const hashes = new Array( 3 );
+
+			const edgeData = {};
+			const vertices = [];
+			for ( let i = 0; i < indexCount; i += 3 ) {
+
+				if ( indexAttr ) {
+
+					indexArr[ 0 ] = indexAttr.getX( i );
+					indexArr[ 1 ] = indexAttr.getX( i + 1 );
+					indexArr[ 2 ] = indexAttr.getX( i + 2 );
+
+				} else {
+
+					indexArr[ 0 ] = i;
+					indexArr[ 1 ] = i + 1;
+					indexArr[ 2 ] = i + 2;
+
+				}
+
+				const { a, b, c } = _triangle;
+				a.fromBufferAttribute( positionAttr, indexArr[ 0 ] );
+				b.fromBufferAttribute( positionAttr, indexArr[ 1 ] );
+				c.fromBufferAttribute( positionAttr, indexArr[ 2 ] );
+				_triangle.getNormal( _normal );
+
+				// create hashes for the edge from the vertices
+				hashes[ 0 ] = `${ Math.round( a.x * precision ) },${ Math.round( a.y * precision ) },${ Math.round( a.z * precision ) }`;
+				hashes[ 1 ] = `${ Math.round( b.x * precision ) },${ Math.round( b.y * precision ) },${ Math.round( b.z * precision ) }`;
+				hashes[ 2 ] = `${ Math.round( c.x * precision ) },${ Math.round( c.y * precision ) },${ Math.round( c.z * precision ) }`;
+
+				// skip degenerate triangles
+				if ( hashes[ 0 ] === hashes[ 1 ] || hashes[ 1 ] === hashes[ 2 ] || hashes[ 2 ] === hashes[ 0 ] ) {
+
+					continue;
+
+				}
+
+				// iterate over every edge
+				for ( let j = 0; j < 3; j ++ ) {
+
+					// get the first and next vertex making up the edge
+					const jNext = ( j + 1 ) % 3;
+					const vecHash0 = hashes[ j ];
+					const vecHash1 = hashes[ jNext ];
+					const v0 = _triangle[ vertKeys[ j ] ];
+					const v1 = _triangle[ vertKeys[ jNext ] ];
+
+					const hash = `${ vecHash0 }_${ vecHash1 }`;
+					const reverseHash = `${ vecHash1 }_${ vecHash0 }`;
+
+					if ( reverseHash in edgeData && edgeData[ reverseHash ] ) {
+
+						// if we found a sibling edge add it into the vertex array if
+						// it meets the angle threshold and delete the edge from the map.
+						if ( _normal.dot( edgeData[ reverseHash ].normal ) <= thresholdDot ) {
+
+							vertices.push( v0.x, v0.y, v0.z );
+							vertices.push( v1.x, v1.y, v1.z );
+
+						}
+
+						edgeData[ reverseHash ] = null;
+
+					} else if ( ! ( hash in edgeData ) ) {
+
+						// if we've already got an edge here then skip adding a new one
+						edgeData[ hash ] = {
+
+							index0: indexArr[ j ],
+							index1: indexArr[ jNext ],
+							normal: _normal.clone(),
+
+						};
+
+					}
+
+				}
+
+			}
+
+			// iterate over all remaining, unmatched edges and add them to the vertex array
+			for ( const key in edgeData ) {
+
+				if ( edgeData[ key ] ) {
+
+					const { index0, index1 } = edgeData[ key ];
+					_v0.fromBufferAttribute( positionAttr, index0 );
+					_v1$1.fromBufferAttribute( positionAttr, index1 );
+
+					vertices.push( _v0.x, _v0.y, _v0.z );
+					vertices.push( _v1$1.x, _v1$1.y, _v1$1.z );
+
+				}
+
+			}
+
+			this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+
+		}
+
+	}
+
+}
+
 class MeshPhongMaterial extends Material {
 
 	constructor( parameters ) {
@@ -33932,7 +34066,7 @@ const subsetOfTHREE = {
   
   const canvas = document.getElementById("three-canvas");
   
-  //1 The scene
+// 1 The scene
   const scene = new Scene();
     // Give a color to the scene
   scene.background = new Color$1(0xdedeee);
@@ -33941,118 +34075,123 @@ const subsetOfTHREE = {
     axes.renderOrder = 2;
     scene.add(axes);
   
-  //2 The Object
+// 2 The Object
 
-    //   const geometry = new BoxGeometry(0.5, 0.5, 0.5);
-    //   const material = new MeshBasicMaterial({ color: "orange" });
-    //   const cubeMesh = new Mesh(geometry, material);
-    //   scene.add(cubeMesh);
+  // 2.1 Create a first Box
+        //Define a BOX Geometry
+        const geometry = new BoxGeometry();
+        //Define the box materials
+        const material = new MeshBasicMaterial({
+            color: 0xcccccc,
+            wireframe: true,
+        });
 
-    //Define a BOX Geometry
-    const geometry = new BoxGeometry();
-    //Define the box materials
-    const material = new MeshBasicMaterial({
-        color: 0xcccccc,
-        wireframe: true,
-    });
+        //Create a BOX from the defined elements
+        const cube = new Mesh(geometry, material);
 
-    //Create a BOX from the defined elements
-    const cube = new Mesh(geometry, material);
+        //Create a box surface geometry
+        const surfacegeometry = new BoxGeometry();
+        //Create a material for the surface box
+        const surfacematerial = new MeshNormalMaterial({
+            transparent: true,
+            opacity: 0.5,
+        });
+        //Create the surface Cube componed from the geometry+material
+        const surfaceCube = new Mesh(surfacegeometry, surfacematerial);
+        //Add the surfaceCube as a child of the first Cube created on top
+        cube.add(surfaceCube);
 
-    //Create a box surface geometry
-    const surfacegeometry = new BoxGeometry();
-    //Create a material for the surface box
-    const surfacematerial = new MeshNormalMaterial({
-        transparent: true,
-        opacity: 0.5,
-    });
-    //Create the surface Cube componed from the geometry+material
-    const surfaceCube = new Mesh(surfacegeometry, surfacematerial);
-    //Add the surfaceCube as a child of the first Cube created on top
-    cube.add(surfaceCube);
+        //Add the BOX to the scene to be able to see it
+        scene.add(cube);
 
-    //Add the BOX to the scene to be able to see it
-    scene.add(cube);
+    // 2.2 Create a second box
+        //Define a Phong Material
+        const PhongMaterial = new MeshPhongMaterial({
+            color: 0xff00ff,
+            specular: 0xffffff,
+            shininess: 100,
+            flatShading: true,
+        });
+        //Create a Phong Cube
+        const PhongCube = new Mesh(geometry, PhongMaterial);
+        //Move the Phong Cube
+        PhongCube.position.x = 2;
+        //Add the Phong Cube to the scene to be able to see it
+        scene.add(PhongCube);
 
-// Create a second box
-    //Define a Phong Material
-    const PhongMaterial = new MeshPhongMaterial({
-        color: 0xff00ff,
-        specular: 0xffffff,
-        shininess: 100,
-        flatShading: true,
-    });
-    //Create a Phong Cube
-    const PhongCube = new Mesh(geometry, PhongMaterial);
-    //Move the Phong Cube
-    PhongCube.position.x = 2;
-    //Add the Phong Cube to the scene to be able to see it
-    scene.add(PhongCube);
+    // 2.3 Create a third box
+        const boxGeometry = new BoxGeometry(1, 1, 1);
+        const edgesGeometry = new EdgesGeometry(boxGeometry);
+        const edgesMaterial = new LineBasicMaterial({color : 0x000000});
+        const wireframeBox = new LineSegments(edgesGeometry, edgesMaterial);
+        wireframeBox.position.x = -2;
+        scene.add(wireframeBox);
   
 // 3 The Camera
-  const camera = new PerspectiveCamera(
-    75,
-    canvas.clientWidth / canvas.clientHeight
-  );
-  camera.position.z = 4; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
-  camera.position.y = 3;
-  camera.position.x = 3;
-  camera.lookAt(axes.position);
-  scene.add(camera);
+    const camera = new PerspectiveCamera(
+        75,
+        canvas.clientWidth / canvas.clientHeight
+    );
+    camera.position.z = 4; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
+    camera.position.y = 3;
+    camera.position.x = 3;
+    camera.lookAt(axes.position);
+    scene.add(camera);
   
-//4 The Renderer
+// 4 The Renderer
 
-  const renderer = new WebGLRenderer({
-    canvas: canvas,
-  });
-  
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    const renderer = new WebGLRenderer({
+        canvas: canvas,
+    });
+    
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
   
 // 5 Lights
   
-  const ambientLight = new AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
+    const ambientLight = new AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
 
-  const light1 = new DirectionalLight();
-  light1.position.set(2,1,3).normalize();
-  scene.add(light1);
+    const light1 = new DirectionalLight();
+    light1.position.set(2,1,3).normalize();
+    scene.add(light1);
 
-  const light2 = new DirectionalLight();
-  light2.position.set(-3,2,-1).normalize();
-  scene.add(light2);
+    const light2 = new DirectionalLight();
+    light2.position.set(-3,2,-1).normalize();
+    scene.add(light2);
 
 // 6 Responsivity
 
-  window.addEventListener("resize", () => {
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-  });
+    window.addEventListener("resize", () => {
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    });
 
 // 7 Controls
-  CameraControls.install( { THREE: subsetOfTHREE } ); 
-  const clock = new Clock();
-  const cameraControls = new CameraControls(camera, canvas);
-  
-  function animate() {
-    const delta = clock.getDelta();
-      cameraControls.update( delta );
-      renderer.render( scene, camera );
-    requestAnimationFrame(animate);
-  }
-  
-  animate();
+    CameraControls.install( { THREE: subsetOfTHREE } ); 
+    const clock = new Clock();
+    const cameraControls = new CameraControls(camera, canvas);
 
-  // 8 Grid
+// 8 Animate
+  
+    function animate() {
+        const delta = clock.getDelta();
+        cameraControls.update( delta );
+        renderer.render( scene, camera );
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+// 9 Grid
 
     const grid = new GridHelper();
     grid.material.depthTest = false;
     grid.renderOrder = 1;
     scene.add(grid);
 
-// 9 Load the Dat.GUI Panel
+// 10 Load the Dat.GUI Panel
     const gui = new GUI$1();
     //Add a folder for manipulating options
     const cubeFolder = gui.addFolder('Cube');

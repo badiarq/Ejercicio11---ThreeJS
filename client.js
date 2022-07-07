@@ -25,7 +25,10 @@ import {
     Clock,
     DirectionalLight,
     Color,
-    AmbientLight
+    AmbientLight,
+    EdgesGeometry,
+    LineBasicMaterial,
+    LineSegments
   } from "three";
   
   import CameraControls from 'camera-controls';
@@ -49,7 +52,7 @@ import {
   
   const canvas = document.getElementById("three-canvas");
   
-  //1 The scene
+// 1 The scene
   const scene = new Scene();
     // Give a color to the scene
   scene.background = new THREE.Color(0xdedeee)
@@ -58,118 +61,123 @@ import {
     axes.renderOrder = 2;
     scene.add(axes);
   
-  //2 The Object
+// 2 The Object
 
-    //   const geometry = new BoxGeometry(0.5, 0.5, 0.5);
-    //   const material = new MeshBasicMaterial({ color: "orange" });
-    //   const cubeMesh = new Mesh(geometry, material);
-    //   scene.add(cubeMesh);
+  // 2.1 Create a first Box
+        //Define a BOX Geometry
+        const geometry = new THREE.BoxGeometry()
+        //Define the box materials
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xcccccc,
+            wireframe: true,
+        })
 
-    //Define a BOX Geometry
-    const geometry = new THREE.BoxGeometry()
-    //Define the box materials
-    const material = new THREE.MeshBasicMaterial({
-        color: 0xcccccc,
-        wireframe: true,
-    })
+        //Create a BOX from the defined elements
+        const cube = new THREE.Mesh(geometry, material)
 
-    //Create a BOX from the defined elements
-    const cube = new THREE.Mesh(geometry, material)
+        //Create a box surface geometry
+        const surfacegeometry = new THREE.BoxGeometry()
+        //Create a material for the surface box
+        const surfacematerial = new THREE.MeshNormalMaterial({
+            transparent: true,
+            opacity: 0.5,
+        })
+        //Create the surface Cube componed from the geometry+material
+        const surfaceCube = new THREE.Mesh(surfacegeometry, surfacematerial);
+        //Add the surfaceCube as a child of the first Cube created on top
+        cube.add(surfaceCube);
 
-    //Create a box surface geometry
-    const surfacegeometry = new THREE.BoxGeometry()
-    //Create a material for the surface box
-    const surfacematerial = new THREE.MeshNormalMaterial({
-        transparent: true,
-        opacity: 0.5,
-    })
-    //Create the surface Cube componed from the geometry+material
-    const surfaceCube = new THREE.Mesh(surfacegeometry, surfacematerial);
-    //Add the surfaceCube as a child of the first Cube created on top
-    cube.add(surfaceCube);
+        //Add the BOX to the scene to be able to see it
+        scene.add(cube);
 
-    //Add the BOX to the scene to be able to see it
-    scene.add(cube);
+    // 2.2 Create a second box
+        //Define a Phong Material
+        const PhongMaterial = new THREE.MeshPhongMaterial({
+            color: 0xff00ff,
+            specular: 0xffffff,
+            shininess: 100,
+            flatShading: true,
+        })
+        //Create a Phong Cube
+        const PhongCube = new THREE.Mesh(geometry, PhongMaterial)
+        //Move the Phong Cube
+        PhongCube.position.x = 2;
+        //Add the Phong Cube to the scene to be able to see it
+        scene.add(PhongCube);
 
-// Create a second box
-    //Define a Phong Material
-    const PhongMaterial = new THREE.MeshPhongMaterial({
-        color: 0xff00ff,
-        specular: 0xffffff,
-        shininess: 100,
-        flatShading: true,
-    })
-    //Create a Phong Cube
-    const PhongCube = new THREE.Mesh(geometry, PhongMaterial)
-    //Move the Phong Cube
-    PhongCube.position.x = 2;
-    //Add the Phong Cube to the scene to be able to see it
-    scene.add(PhongCube);
+    // 2.3 Create a third box
+        const boxGeometry = new BoxGeometry(1, 1, 1);
+        const edgesGeometry = new EdgesGeometry(boxGeometry);
+        const edgesMaterial = new LineBasicMaterial({color : 0x000000});
+        const wireframeBox = new LineSegments(edgesGeometry, edgesMaterial);
+        wireframeBox.position.x = -2;
+        scene.add(wireframeBox);
   
 // 3 The Camera
-  const camera = new PerspectiveCamera(
-    75,
-    canvas.clientWidth / canvas.clientHeight
-  );
-  camera.position.z = 4; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
-  camera.position.y = 3;
-  camera.position.x = 3;
-  camera.lookAt(axes.position);
-  scene.add(camera);
+    const camera = new PerspectiveCamera(
+        75,
+        canvas.clientWidth / canvas.clientHeight
+    );
+    camera.position.z = 4; // Z let's you move backwards and forwards. X is sideways, Y is upward and do
+    camera.position.y = 3;
+    camera.position.x = 3;
+    camera.lookAt(axes.position);
+    scene.add(camera);
   
-//4 The Renderer
+// 4 The Renderer
 
-  const renderer = new WebGLRenderer({
-    canvas: canvas,
-  });
-  
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
+    const renderer = new WebGLRenderer({
+        canvas: canvas,
+    });
+    
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
   
 // 5 Lights
   
-  const ambientLight = new AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
+    const ambientLight = new AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
 
-  const light1 = new DirectionalLight();
-  light1.position.set(2,1,3).normalize();
-  scene.add(light1);
+    const light1 = new DirectionalLight();
+    light1.position.set(2,1,3).normalize();
+    scene.add(light1);
 
-  const light2 = new DirectionalLight();
-  light2.position.set(-3,2,-1).normalize();
-  scene.add(light2);
+    const light2 = new DirectionalLight();
+    light2.position.set(-3,2,-1).normalize();
+    scene.add(light2);
 
 // 6 Responsivity
 
-  window.addEventListener("resize", () => {
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-  });
+    window.addEventListener("resize", () => {
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    });
 
 // 7 Controls
-  CameraControls.install( { THREE: subsetOfTHREE } ); 
-  const clock = new Clock();
-  const cameraControls = new CameraControls(camera, canvas);
-  
-  function animate() {
-    const delta = clock.getDelta();
-      cameraControls.update( delta );
-      renderer.render( scene, camera );
-    requestAnimationFrame(animate);
-  }
-  
-  animate();
+    CameraControls.install( { THREE: subsetOfTHREE } ); 
+    const clock = new Clock();
+    const cameraControls = new CameraControls(camera, canvas);
 
-  // 8 Grid
+// 8 Animate
+  
+    function animate() {
+        const delta = clock.getDelta();
+        cameraControls.update( delta );
+        renderer.render( scene, camera );
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+// 9 Grid
 
     const grid = new THREE.GridHelper();
     grid.material.depthTest = false;
     grid.renderOrder = 1;
     scene.add(grid);
 
-// 9 Load the Dat.GUI Panel
+// 10 Load the Dat.GUI Panel
     const gui = new GUI()
     //Add a folder for manipulating options
     const cubeFolder = gui.addFolder('Cube')
