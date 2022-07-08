@@ -43558,7 +43558,7 @@ const subsetOfTHREE = {
 
     // 3.1 Create the camera
     const camera = new PerspectiveCamera(
-        75,
+        50,
         canvas.clientWidth / canvas.clientHeight
     );
 
@@ -43568,9 +43568,11 @@ const subsetOfTHREE = {
     const cameraControls = new CameraControls(camera, canvas);
 
     // 3.3 Set camera position (x, y , z) + camera target (x, y, z)
-    cameraControls.setLookAt(25, 6, 15, 20, 0, 3);
+    cameraControls.setLookAt(-2, 2, 8, 0, 1, 0);
+    // 3.4 Set the camera distance
+    cameraControls.distance = 10;
 
-    // 3.4 Add the camera to the scene
+    // 3.5 Add the camera to the scene
     scene.add(camera);
   
 // 4 The Renderer
@@ -43677,11 +43679,15 @@ const subsetOfTHREE = {
         material.needsUpdate = true;
     }
 
+
+    const cameraGui = new GUI$1();
     //Add a camera distance panel
-    const cameraFolder = gui.addFolder('Camera');
-    cameraFolder.add(camera.position, 'z', 0, 10);
+    const cameraDistanceFolder = cameraGui.addFolder('Distance');
+    // cameraFolder.add(camera.position, 'z', 0, 10)
+    cameraDistanceFolder.add(cameraControls, 'distance', 1, 50, 1);
     //To open the tabs by default:
-    cameraFolder.open();
+    cameraDistanceFolder.open();
+    console.log(cameraControls.getPosition());
 
 // 10 Add GLTF file to the scene
 
@@ -43708,7 +43714,7 @@ const subsetOfTHREE = {
 
             (gltf) => {
                 // Modify the position of the Geometry
-                    gltf.scene.position.x = -55;
+                    gltf.scene.position.x = -70;
                     gltf.scene.position.y = -13;
                     gltf.scene.position.z = -37;
                 // Add position controls to the GUI
