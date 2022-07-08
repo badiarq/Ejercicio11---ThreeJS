@@ -29642,140 +29642,6 @@ function testPoint( point, index, localThresholdSq, matrixWorld, raycaster, inte
 
 }
 
-const _v0 = /*@__PURE__*/ new Vector3();
-const _v1$1 = /*@__PURE__*/ new Vector3();
-const _normal = /*@__PURE__*/ new Vector3();
-const _triangle = /*@__PURE__*/ new Triangle();
-
-class EdgesGeometry extends BufferGeometry {
-
-	constructor( geometry = null, thresholdAngle = 1 ) {
-
-		super();
-		this.type = 'EdgesGeometry';
-
-		this.parameters = {
-			geometry: geometry,
-			thresholdAngle: thresholdAngle
-		};
-
-		if ( geometry !== null ) {
-
-			const precisionPoints = 4;
-			const precision = Math.pow( 10, precisionPoints );
-			const thresholdDot = Math.cos( DEG2RAD * thresholdAngle );
-
-			const indexAttr = geometry.getIndex();
-			const positionAttr = geometry.getAttribute( 'position' );
-			const indexCount = indexAttr ? indexAttr.count : positionAttr.count;
-
-			const indexArr = [ 0, 0, 0 ];
-			const vertKeys = [ 'a', 'b', 'c' ];
-			const hashes = new Array( 3 );
-
-			const edgeData = {};
-			const vertices = [];
-			for ( let i = 0; i < indexCount; i += 3 ) {
-
-				if ( indexAttr ) {
-
-					indexArr[ 0 ] = indexAttr.getX( i );
-					indexArr[ 1 ] = indexAttr.getX( i + 1 );
-					indexArr[ 2 ] = indexAttr.getX( i + 2 );
-
-				} else {
-
-					indexArr[ 0 ] = i;
-					indexArr[ 1 ] = i + 1;
-					indexArr[ 2 ] = i + 2;
-
-				}
-
-				const { a, b, c } = _triangle;
-				a.fromBufferAttribute( positionAttr, indexArr[ 0 ] );
-				b.fromBufferAttribute( positionAttr, indexArr[ 1 ] );
-				c.fromBufferAttribute( positionAttr, indexArr[ 2 ] );
-				_triangle.getNormal( _normal );
-
-				// create hashes for the edge from the vertices
-				hashes[ 0 ] = `${ Math.round( a.x * precision ) },${ Math.round( a.y * precision ) },${ Math.round( a.z * precision ) }`;
-				hashes[ 1 ] = `${ Math.round( b.x * precision ) },${ Math.round( b.y * precision ) },${ Math.round( b.z * precision ) }`;
-				hashes[ 2 ] = `${ Math.round( c.x * precision ) },${ Math.round( c.y * precision ) },${ Math.round( c.z * precision ) }`;
-
-				// skip degenerate triangles
-				if ( hashes[ 0 ] === hashes[ 1 ] || hashes[ 1 ] === hashes[ 2 ] || hashes[ 2 ] === hashes[ 0 ] ) {
-
-					continue;
-
-				}
-
-				// iterate over every edge
-				for ( let j = 0; j < 3; j ++ ) {
-
-					// get the first and next vertex making up the edge
-					const jNext = ( j + 1 ) % 3;
-					const vecHash0 = hashes[ j ];
-					const vecHash1 = hashes[ jNext ];
-					const v0 = _triangle[ vertKeys[ j ] ];
-					const v1 = _triangle[ vertKeys[ jNext ] ];
-
-					const hash = `${ vecHash0 }_${ vecHash1 }`;
-					const reverseHash = `${ vecHash1 }_${ vecHash0 }`;
-
-					if ( reverseHash in edgeData && edgeData[ reverseHash ] ) {
-
-						// if we found a sibling edge add it into the vertex array if
-						// it meets the angle threshold and delete the edge from the map.
-						if ( _normal.dot( edgeData[ reverseHash ].normal ) <= thresholdDot ) {
-
-							vertices.push( v0.x, v0.y, v0.z );
-							vertices.push( v1.x, v1.y, v1.z );
-
-						}
-
-						edgeData[ reverseHash ] = null;
-
-					} else if ( ! ( hash in edgeData ) ) {
-
-						// if we've already got an edge here then skip adding a new one
-						edgeData[ hash ] = {
-
-							index0: indexArr[ j ],
-							index1: indexArr[ jNext ],
-							normal: _normal.clone(),
-
-						};
-
-					}
-
-				}
-
-			}
-
-			// iterate over all remaining, unmatched edges and add them to the vertex array
-			for ( const key in edgeData ) {
-
-				if ( edgeData[ key ] ) {
-
-					const { index0, index1 } = edgeData[ key ];
-					_v0.fromBufferAttribute( positionAttr, index0 );
-					_v1$1.fromBufferAttribute( positionAttr, index1 );
-
-					vertices.push( _v0.x, _v0.y, _v0.z );
-					vertices.push( _v1$1.x, _v1$1.y, _v1$1.z );
-
-				}
-
-			}
-
-			this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-
-		}
-
-	}
-
-}
-
 class MeshStandardMaterial extends Material {
 
 	constructor( parameters ) {
@@ -30079,176 +29945,6 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 		this.specularIntensityMap = source.specularIntensityMap;
 		this.specularColor.copy( source.specularColor );
 		this.specularColorMap = source.specularColorMap;
-
-		return this;
-
-	}
-
-}
-
-class MeshPhongMaterial extends Material {
-
-	constructor( parameters ) {
-
-		super();
-
-		this.isMeshPhongMaterial = true;
-
-		this.type = 'MeshPhongMaterial';
-
-		this.color = new Color$1( 0xffffff ); // diffuse
-		this.specular = new Color$1( 0x111111 );
-		this.shininess = 30;
-
-		this.map = null;
-
-		this.lightMap = null;
-		this.lightMapIntensity = 1.0;
-
-		this.aoMap = null;
-		this.aoMapIntensity = 1.0;
-
-		this.emissive = new Color$1( 0x000000 );
-		this.emissiveIntensity = 1.0;
-		this.emissiveMap = null;
-
-		this.bumpMap = null;
-		this.bumpScale = 1;
-
-		this.normalMap = null;
-		this.normalMapType = TangentSpaceNormalMap;
-		this.normalScale = new Vector2( 1, 1 );
-
-		this.displacementMap = null;
-		this.displacementScale = 1;
-		this.displacementBias = 0;
-
-		this.specularMap = null;
-
-		this.alphaMap = null;
-
-		this.envMap = null;
-		this.combine = MultiplyOperation;
-		this.reflectivity = 1;
-		this.refractionRatio = 0.98;
-
-		this.wireframe = false;
-		this.wireframeLinewidth = 1;
-		this.wireframeLinecap = 'round';
-		this.wireframeLinejoin = 'round';
-
-		this.flatShading = false;
-
-		this.fog = true;
-
-		this.setValues( parameters );
-
-	}
-
-	copy( source ) {
-
-		super.copy( source );
-
-		this.color.copy( source.color );
-		this.specular.copy( source.specular );
-		this.shininess = source.shininess;
-
-		this.map = source.map;
-
-		this.lightMap = source.lightMap;
-		this.lightMapIntensity = source.lightMapIntensity;
-
-		this.aoMap = source.aoMap;
-		this.aoMapIntensity = source.aoMapIntensity;
-
-		this.emissive.copy( source.emissive );
-		this.emissiveMap = source.emissiveMap;
-		this.emissiveIntensity = source.emissiveIntensity;
-
-		this.bumpMap = source.bumpMap;
-		this.bumpScale = source.bumpScale;
-
-		this.normalMap = source.normalMap;
-		this.normalMapType = source.normalMapType;
-		this.normalScale.copy( source.normalScale );
-
-		this.displacementMap = source.displacementMap;
-		this.displacementScale = source.displacementScale;
-		this.displacementBias = source.displacementBias;
-
-		this.specularMap = source.specularMap;
-
-		this.alphaMap = source.alphaMap;
-
-		this.envMap = source.envMap;
-		this.combine = source.combine;
-		this.reflectivity = source.reflectivity;
-		this.refractionRatio = source.refractionRatio;
-
-		this.wireframe = source.wireframe;
-		this.wireframeLinewidth = source.wireframeLinewidth;
-		this.wireframeLinecap = source.wireframeLinecap;
-		this.wireframeLinejoin = source.wireframeLinejoin;
-
-		this.flatShading = source.flatShading;
-
-		this.fog = source.fog;
-
-		return this;
-
-	}
-
-}
-
-class MeshNormalMaterial extends Material {
-
-	constructor( parameters ) {
-
-		super();
-
-		this.isMeshNormalMaterial = true;
-
-		this.type = 'MeshNormalMaterial';
-
-		this.bumpMap = null;
-		this.bumpScale = 1;
-
-		this.normalMap = null;
-		this.normalMapType = TangentSpaceNormalMap;
-		this.normalScale = new Vector2( 1, 1 );
-
-		this.displacementMap = null;
-		this.displacementScale = 1;
-		this.displacementBias = 0;
-
-		this.wireframe = false;
-		this.wireframeLinewidth = 1;
-
-		this.flatShading = false;
-
-		this.setValues( parameters );
-
-	}
-
-	copy( source ) {
-
-		super.copy( source );
-
-		this.bumpMap = source.bumpMap;
-		this.bumpScale = source.bumpScale;
-
-		this.normalMap = source.normalMap;
-		this.normalMapType = source.normalMapType;
-		this.normalScale.copy( source.normalScale );
-
-		this.displacementMap = source.displacementMap;
-		this.displacementScale = source.displacementScale;
-		this.displacementBias = source.displacementBias;
-
-		this.wireframe = source.wireframe;
-		this.wireframeLinewidth = source.wireframeLinewidth;
-
-		this.flatShading = source.flatShading;
 
 		return this;
 
@@ -43502,57 +43198,6 @@ const subsetOfTHREE = {
   
 // 2 The Object
 
-  // 2.1 Create a first Box
-        //Define a BOX Geometry
-        const geometry = new BoxGeometry();
-        //Define the box materials
-        const material = new MeshBasicMaterial({
-            color: 0xcccccc,
-            wireframe: true,
-        });
-
-        //Create a BOX from the defined elements
-        const cube = new Mesh(geometry, material);
-
-        //Create a box surface geometry
-        const surfacegeometry = new BoxGeometry();
-        //Create a material for the surface box
-        const surfacematerial = new MeshNormalMaterial({
-            transparent: true,
-            opacity: 0.5,
-        });
-        //Create the surface Cube componed from the geometry+material
-        const surfaceCube = new Mesh(surfacegeometry, surfacematerial);
-        //Add the surfaceCube as a child of the first Cube created on top
-        cube.add(surfaceCube);
-
-        //Add the BOX to the scene to be able to see it
-        scene.add(cube);
-
-    // 2.2 Create a second box
-        //Define a Phong Material
-        const PhongMaterial = new MeshPhongMaterial({
-            color: 0xff00ff,
-            specular: 0xffffff,
-            shininess: 100,
-            flatShading: true,
-        });
-        //Create a Phong Cube
-        const PhongCube = new Mesh(geometry, PhongMaterial);
-        //Move the Phong Cube
-        PhongCube.position.x = 2;
-        //Add the Phong Cube to the scene to be able to see it
-        scene.add(PhongCube);
-
-    // 2.3 Create a third box
-        const boxGeometry = new BoxGeometry(1, 1, 1);
-        const edgesGeometry = new EdgesGeometry(boxGeometry);
-        const edgesMaterial = new LineBasicMaterial({color : 0x000000});
-        const wireframeBox = new LineSegments(edgesGeometry, edgesMaterial);
-        wireframeBox.position.x = -2;
-        scene.add(wireframeBox);
-
-
 
 // 3 The Camera
 
@@ -43624,62 +43269,35 @@ const subsetOfTHREE = {
     scene.add(grid);
 
 // 9 Load the Dat.GUI Panel
-    const gui = new GUI$1();
-    //Add a folder for manipulating options
-    const cubeFolder = gui.addFolder('Cube');
-    //Load cubeFolder section
-    cubeFolder.open();
-    //Add a folder conatining 3 rotation panels [x, y, z]
-    const cubeRotationFolder = cubeFolder.addFolder('Rotation');
-    cubeRotationFolder.add(cube.rotation, 'x', 0, Math.PI * 2);
-    cubeRotationFolder.add(cube.rotation, 'y', 0, Math.PI * 2);
-    cubeRotationFolder.add(cube.rotation, 'z', 0, Math.PI * 2);
-    //Load cubeRotation panels
-    cubeRotationFolder.open();
-    //Add a folder conatining 3 positions panels [x, y, z] (axe, min, max, step)
-    const cubePositionFolder = cubeFolder.addFolder('Position');
-    cubePositionFolder.add(cube.position, 'x', -10, 10, 0.1);
-    cubePositionFolder.add(cube.position, 'y', -10, 10, 0.1);
-    cubePositionFolder.add(cube.position, 'z', -10, 10, 0.1);
-    //Load cubePosition panels
-    cubePositionFolder.open();
-    //Add a folder conatining 3 positions panels [x, y, z] (axe, min, max)
-    const cubeScaleFolder = cubeFolder.addFolder('Scale');
-    cubeScaleFolder.add(cube.scale, 'x', -5, 5);
-    cubeScaleFolder.add(cube.scale, 'y', -5, 5);
-    cubeScaleFolder.add(cube.scale, 'z', -5, 5);
-    //Add a boolean option to show/hide the cube geometry
-    cubeFolder.add(cube, 'visible');
-    //Load cubeScale panels
-    cubeScaleFolder.open();
-    //Create a transparency section
-    const TransparencyFolder = cubeFolder.addFolder('Transparent');
-    //Add a transparent option as a panel
-    TransparencyFolder.add(surfacematerial, 'transparent');
-    //Add an opacity panel
-    TransparencyFolder.add(surfacematerial, 'opacity', 0, 1, 0.01);
-    // Load cubeFolder section
-    TransparencyFolder.open();
-    //Declare the different options we want to have for the Side Panel
-    //A BackSide option will allows us to see the interior of the box from the outside
-    const options = {
-        side: {
-            "FrontSide": FrontSide,
-            "BackSide": BackSide,
-            "DoubleSide": DoubleSide,
-        }
-    };
-    //Add the options to the panel
-    TransparencyFolder.add(surfacematerial, 'side', options.side).onChange(() => updateMaterial());
-    //Run a fonction so the side option can work correctly
-    function updateMaterial(){
-        //convert the side option into a number (it won't work if it's a string)
-        surfacematerial.side = Number(surfacematerial.side);
-        //update when charging WebGL
-        material.needsUpdate = true;
-    }
 
+    // //Create a transparency section
+    // const TransparencyFolder = cubeFolder.addFolder('Transparent')
+    // //Add a transparent option as a panel
+    // TransparencyFolder.add(surfacematerial, 'transparent')
+    // //Add an opacity panel
+    // TransparencyFolder.add(surfacematerial, 'opacity', 0, 1, 0.01)
+    // // Load cubeFolder section
+    // TransparencyFolder.open()
+    // //Declare the different options we want to have for the Side Panel
+    // //A BackSide option will allows us to see the interior of the box from the outside
+    // const options = {
+    //     side: {
+    //         "FrontSide": THREE.FrontSide,
+    //         "BackSide": THREE.BackSide,
+    //         "DoubleSide": THREE.DoubleSide,
+    //     }
+    // }
+    // //Add the options to the panel
+    // TransparencyFolder.add(surfacematerial, 'side', options.side).onChange(() => updateMaterial())
+    // //Run a fonction so the side option can work correctly
+    // function updateMaterial(){
+    //     //convert the side option into a number (it won't work if it's a string)
+    //     surfacematerial.side = Number(surfacematerial.side)
+    //     //update when charging WebGL
+    //     material.needsUpdate = true
+    // }
 
+    // Camera GUI
     const cameraGui = new GUI$1();
     //Add a camera distance panel
     const cameraDistanceFolder = cameraGui.addFolder('Distance');
@@ -43736,66 +43354,66 @@ const subsetOfTHREE = {
                 console.log(error);
             });
 
-// Picking
+// // Picking
 
-    // Objects we want to pick
-    const objectsToPick = [cube, PhongCube, wireframeBox];
+//     // Objects we want to pick
+//     const objectsToPick = [gltf.scene];
 
-    const raycaster = new Raycaster();
-    const mouse = new Vector2();
+//     const raycaster = new Raycaster();
+//     const mouse = new Vector2();
 
-    // Previous Selection
-    const previousSelection = {
-        mesh : null,
-        material: null
-    };
+//     // Previous Selection
+//     const previousSelection = {
+//         mesh : null,
+//         material: null
+//     }
 
-    // Create a material to highlight the selected object
-        const highlightMat = new MeshBasicMaterial({
-            color: 'red',
-            transparent: true,
-            opacity: 0.75,
-        });
+//     // Create a material to highlight the selected object
+//         const highlightMat = new MeshBasicMaterial({
+//             color: 'red',
+//             transparent: true,
+//             opacity: 0.75,
+//         });
 
-    // Get Mouse position
-    window.addEventListener('mousemove', (event) => {
-        mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-        mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+//     // Get Mouse position
+//     window.addEventListener('mousemove', (event) => {
+//         mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
+//         mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
 
-    // Picking
-        raycaster.setFromCamera(mouse, camera);
-        const intersections = raycaster.intersectObjects(objectsToPick);
+//     // Picking
+//         raycaster.setFromCamera(mouse, camera);
+//         const intersections = raycaster.intersectObjects(objectsToPick);
         
-        // intersection between mouse and material
-        const hasCollided = intersections.length !== 0 ;
+//         // intersection between mouse and material
+//         const hasCollided = intersections.length !== 0 ;
 
-        // if there is an intersection than highlight the material
-        if(!hasCollided) {
-            restorePreviousSelection();
-            return;
-        }
+//         // if there is an intersection than highlight the material
+//         if(!hasCollided) {
+//             restorePreviousSelection();
+//             return;
+//         }
 
-        const firstIntersection = intersections[0];
+//         const firstIntersection = intersections[0];
 
-        const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
-        if(isPreviousSelection) return; 
+//         const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
+//         if(isPreviousSelection) return; 
 
-        restorePreviousSelection();
+//         restorePreviousSelection();
 
-        savePreviousSelction(firstIntersection);
+//         savePreviousSelction(firstIntersection);
 
-        firstIntersection.object.material = highlightMat;
-    });
+//         firstIntersection.object.material = highlightMat;
+//     })
 
-    function savePreviousSelction(item) {
-        previousSelection.mesh = item.object;
-        previousSelection.material = item.object.material;
-    }
+//     function savePreviousSelction(item) {
+//         previousSelection.mesh = item.object;
+//         previousSelection.material = item.object.material;
+//     }
 
-    function restorePreviousSelection() {
-        if(previousSelection.mesh) {
-            previousSelection.mesh.material = previousSelection.material;
-            previousSelection.mesh = null;
-            previousSelection.material = null;
-        }
-    }
+//     function restorePreviousSelection() {
+//         if(previousSelection.mesh) {
+//             previousSelection.mesh.material = previousSelection.material;
+//             previousSelection.mesh = null;
+//             previousSelection.material = null;
+//         }
+//     }

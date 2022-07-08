@@ -64,57 +64,6 @@ import {
   
 // 2 The Object
 
-  // 2.1 Create a first Box
-        //Define a BOX Geometry
-        const geometry = new THREE.BoxGeometry()
-        //Define the box materials
-        const material = new THREE.MeshBasicMaterial({
-            color: 0xcccccc,
-            wireframe: true,
-        })
-
-        //Create a BOX from the defined elements
-        const cube = new THREE.Mesh(geometry, material)
-
-        //Create a box surface geometry
-        const surfacegeometry = new THREE.BoxGeometry()
-        //Create a material for the surface box
-        const surfacematerial = new THREE.MeshNormalMaterial({
-            transparent: true,
-            opacity: 0.5,
-        })
-        //Create the surface Cube componed from the geometry+material
-        const surfaceCube = new THREE.Mesh(surfacegeometry, surfacematerial);
-        //Add the surfaceCube as a child of the first Cube created on top
-        cube.add(surfaceCube);
-
-        //Add the BOX to the scene to be able to see it
-        scene.add(cube);
-
-    // 2.2 Create a second box
-        //Define a Phong Material
-        const PhongMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff00ff,
-            specular: 0xffffff,
-            shininess: 100,
-            flatShading: true,
-        })
-        //Create a Phong Cube
-        const PhongCube = new THREE.Mesh(geometry, PhongMaterial)
-        //Move the Phong Cube
-        PhongCube.position.x = 2;
-        //Add the Phong Cube to the scene to be able to see it
-        scene.add(PhongCube);
-
-    // 2.3 Create a third box
-        const boxGeometry = new BoxGeometry(1, 1, 1);
-        const edgesGeometry = new EdgesGeometry(boxGeometry);
-        const edgesMaterial = new LineBasicMaterial({color : 0x000000});
-        const wireframeBox = new LineSegments(edgesGeometry, edgesMaterial);
-        wireframeBox.position.x = -2;
-        scene.add(wireframeBox);
-
-
 
 // 3 The Camera
 
@@ -186,62 +135,35 @@ import {
     scene.add(grid);
 
 // 9 Load the Dat.GUI Panel
-    const gui = new GUI()
-    //Add a folder for manipulating options
-    const cubeFolder = gui.addFolder('Cube')
-    //Load cubeFolder section
-    cubeFolder.open()
-    //Add a folder conatining 3 rotation panels [x, y, z]
-    const cubeRotationFolder = cubeFolder.addFolder('Rotation')
-    cubeRotationFolder.add(cube.rotation, 'x', 0, Math.PI * 2)
-    cubeRotationFolder.add(cube.rotation, 'y', 0, Math.PI * 2)
-    cubeRotationFolder.add(cube.rotation, 'z', 0, Math.PI * 2)
-    //Load cubeRotation panels
-    cubeRotationFolder.open()
-    //Add a folder conatining 3 positions panels [x, y, z] (axe, min, max, step)
-    const cubePositionFolder = cubeFolder.addFolder('Position')
-    cubePositionFolder.add(cube.position, 'x', -10, 10, 0.1)
-    cubePositionFolder.add(cube.position, 'y', -10, 10, 0.1)
-    cubePositionFolder.add(cube.position, 'z', -10, 10, 0.1)
-    //Load cubePosition panels
-    cubePositionFolder.open()
-    //Add a folder conatining 3 positions panels [x, y, z] (axe, min, max)
-    const cubeScaleFolder = cubeFolder.addFolder('Scale')
-    cubeScaleFolder.add(cube.scale, 'x', -5, 5)
-    cubeScaleFolder.add(cube.scale, 'y', -5, 5)
-    cubeScaleFolder.add(cube.scale, 'z', -5, 5)
-    //Add a boolean option to show/hide the cube geometry
-    cubeFolder.add(cube, 'visible')
-    //Load cubeScale panels
-    cubeScaleFolder.open()
-    //Create a transparency section
-    const TransparencyFolder = cubeFolder.addFolder('Transparent')
-    //Add a transparent option as a panel
-    TransparencyFolder.add(surfacematerial, 'transparent')
-    //Add an opacity panel
-    TransparencyFolder.add(surfacematerial, 'opacity', 0, 1, 0.01)
-    // Load cubeFolder section
-    TransparencyFolder.open()
-    //Declare the different options we want to have for the Side Panel
-    //A BackSide option will allows us to see the interior of the box from the outside
-    const options = {
-        side: {
-            "FrontSide": THREE.FrontSide,
-            "BackSide": THREE.BackSide,
-            "DoubleSide": THREE.DoubleSide,
-        }
-    }
-    //Add the options to the panel
-    TransparencyFolder.add(surfacematerial, 'side', options.side).onChange(() => updateMaterial())
-    //Run a fonction so the side option can work correctly
-    function updateMaterial(){
-        //convert the side option into a number (it won't work if it's a string)
-        surfacematerial.side = Number(surfacematerial.side)
-        //update when charging WebGL
-        material.needsUpdate = true
-    }
 
+    // //Create a transparency section
+    // const TransparencyFolder = cubeFolder.addFolder('Transparent')
+    // //Add a transparent option as a panel
+    // TransparencyFolder.add(surfacematerial, 'transparent')
+    // //Add an opacity panel
+    // TransparencyFolder.add(surfacematerial, 'opacity', 0, 1, 0.01)
+    // // Load cubeFolder section
+    // TransparencyFolder.open()
+    // //Declare the different options we want to have for the Side Panel
+    // //A BackSide option will allows us to see the interior of the box from the outside
+    // const options = {
+    //     side: {
+    //         "FrontSide": THREE.FrontSide,
+    //         "BackSide": THREE.BackSide,
+    //         "DoubleSide": THREE.DoubleSide,
+    //     }
+    // }
+    // //Add the options to the panel
+    // TransparencyFolder.add(surfacematerial, 'side', options.side).onChange(() => updateMaterial())
+    // //Run a fonction so the side option can work correctly
+    // function updateMaterial(){
+    //     //convert the side option into a number (it won't work if it's a string)
+    //     surfacematerial.side = Number(surfacematerial.side)
+    //     //update when charging WebGL
+    //     material.needsUpdate = true
+    // }
 
+    // Camera GUI
     const cameraGui = new GUI()
     //Add a camera distance panel
     const cameraDistanceFolder = cameraGui.addFolder('Distance')
@@ -298,66 +220,66 @@ import {
                 console.log(error);
             })
 
-// Picking
+// // Picking
 
-    // Objects we want to pick
-    const objectsToPick = [cube, PhongCube, wireframeBox];
+//     // Objects we want to pick
+//     const objectsToPick = [gltf.scene];
 
-    const raycaster = new Raycaster();
-    const mouse = new Vector2();
+//     const raycaster = new Raycaster();
+//     const mouse = new Vector2();
 
-    // Previous Selection
-    const previousSelection = {
-        mesh : null,
-        material: null
-    }
+//     // Previous Selection
+//     const previousSelection = {
+//         mesh : null,
+//         material: null
+//     }
 
-    // Create a material to highlight the selected object
-        const highlightMat = new MeshBasicMaterial({
-            color: 'red',
-            transparent: true,
-            opacity: 0.75,
-        });
+//     // Create a material to highlight the selected object
+//         const highlightMat = new MeshBasicMaterial({
+//             color: 'red',
+//             transparent: true,
+//             opacity: 0.75,
+//         });
 
-    // Get Mouse position
-    window.addEventListener('mousemove', (event) => {
-        mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-        mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+//     // Get Mouse position
+//     window.addEventListener('mousemove', (event) => {
+//         mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
+//         mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
 
-    // Picking
-        raycaster.setFromCamera(mouse, camera);
-        const intersections = raycaster.intersectObjects(objectsToPick);
+//     // Picking
+//         raycaster.setFromCamera(mouse, camera);
+//         const intersections = raycaster.intersectObjects(objectsToPick);
         
-        // intersection between mouse and material
-        const hasCollided = intersections.length !== 0 ;
+//         // intersection between mouse and material
+//         const hasCollided = intersections.length !== 0 ;
 
-        // if there is an intersection than highlight the material
-        if(!hasCollided) {
-            restorePreviousSelection();
-            return;
-        }
+//         // if there is an intersection than highlight the material
+//         if(!hasCollided) {
+//             restorePreviousSelection();
+//             return;
+//         }
 
-        const firstIntersection = intersections[0];
+//         const firstIntersection = intersections[0];
 
-        const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
-        if(isPreviousSelection) return; 
+//         const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
+//         if(isPreviousSelection) return; 
 
-        restorePreviousSelection();
+//         restorePreviousSelection();
 
-        savePreviousSelction(firstIntersection);
+//         savePreviousSelction(firstIntersection);
 
-        firstIntersection.object.material = highlightMat;
-    })
+//         firstIntersection.object.material = highlightMat;
+//     })
 
-    function savePreviousSelction(item) {
-        previousSelection.mesh = item.object;
-        previousSelection.material = item.object.material;
-    }
+//     function savePreviousSelction(item) {
+//         previousSelection.mesh = item.object;
+//         previousSelection.material = item.object.material;
+//     }
 
-    function restorePreviousSelection() {
-        if(previousSelection.mesh) {
-            previousSelection.mesh.material = previousSelection.material;
-            previousSelection.mesh = null;
-            previousSelection.material = null;
-        }
-    }
+//     function restorePreviousSelection() {
+//         if(previousSelection.mesh) {
+//             previousSelection.mesh.material = previousSelection.material;
+//             previousSelection.mesh = null;
+//             previousSelection.material = null;
+//         }
+//     }
