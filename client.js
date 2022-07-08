@@ -171,7 +171,6 @@ import {
     cameraDistanceFolder.add(cameraControls, 'distance', 1, 50, 1)
     //To open the tabs by default:
     cameraDistanceFolder.open()
-    console.log(cameraControls.getPosition());
 
 // 10 Add GLTF file to the scene
 
@@ -211,7 +210,6 @@ import {
                     loadingScreen.classList.add('hidden');
             },
             (progress) => {
-                console.log(progress);
                 const progressPercent = progress.loaded / progress.total * 100;
                 const formatted = Math.trunc(progressPercent); // Remove the decimals
                 progressText.textContent = `Loading: ${formatted} %`;
@@ -220,66 +218,80 @@ import {
                 console.log(error);
             })
 
-// // Picking
+// Picking
 
-//     // Objects we want to pick
-//     const objectsToPick = [gltf.scene];
+    const boxGeometry = new THREE.BoxGeometry()
+    const material = new THREE.MeshNormalMaterial()
+    const cube = new THREE.Mesh(boxGeometry, material)
+    cube.position.x = -10
+    scene.add(cube)
 
-//     const raycaster = new Raycaster();
-//     const mouse = new Vector2();
+    // Objects we want to pick
+    const objectsToPick = [cube];
 
-//     // Previous Selection
-//     const previousSelection = {
-//         mesh : null,
-//         material: null
-//     }
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
 
-//     // Create a material to highlight the selected object
-//         const highlightMat = new MeshBasicMaterial({
-//             color: 'red',
-//             transparent: true,
-//             opacity: 0.75,
-//         });
+    // Previous Selection
+    const previousSelection = {
+        mesh : null,
+        material: null
+    }
 
-//     // Get Mouse position
-//     window.addEventListener('mousemove', (event) => {
-//         mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-//         mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+    // Create a material to highlight the selected object
+        const highlightMat = new MeshBasicMaterial({
+            color: 'red',
+            transparent: true,
+            opacity: 0.75,
+        });
 
-//     // Picking
-//         raycaster.setFromCamera(mouse, camera);
-//         const intersections = raycaster.intersectObjects(objectsToPick);
+    // Get Mouse position
+    window.addEventListener('mousemove', (event) => {
+        mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
+        mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+
+    // Picking
+        // raycaster.setFromCamera(mouse, camera);
+        let canvasBounds = canvas.getBoundingClientRect()
+        raycaster.setFromCamera(
+            {
+                x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+                y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+            },
+            camera
+        )
+        const intersections = raycaster.intersectObjects(objectsToPick);
         
-//         // intersection between mouse and material
-//         const hasCollided = intersections.length !== 0 ;
+        // intersection between mouse and material
+        const hasCollided = intersections.length !== 0 ;
 
-//         // if there is an intersection than highlight the material
-//         if(!hasCollided) {
-//             restorePreviousSelection();
-//             return;
-//         }
+        // if there is an intersection than highlight the material
+        if(!hasCollided) {
+            restorePreviousSelection();
+            return;
+        }
 
-//         const firstIntersection = intersections[0];
+        const firstIntersection = intersections[0];
 
-//         const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
-//         if(isPreviousSelection) return; 
+        const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
+        if(isPreviousSelection) return; 
 
-//         restorePreviousSelection();
+        restorePreviousSelection();
 
-//         savePreviousSelction(firstIntersection);
+        savePreviousSelction(firstIntersection);
 
-//         firstIntersection.object.material = highlightMat;
-//     })
+        firstIntersection.object.material = highlightMat;
+    })
 
-//     function savePreviousSelction(item) {
-//         previousSelection.mesh = item.object;
-//         previousSelection.material = item.object.material;
-//     }
+    function savePreviousSelction(item) {
+        previousSelection.mesh = item.object;
+        previousSelection.material = item.object.material;
+    }
 
-//     function restorePreviousSelection() {
-//         if(previousSelection.mesh) {
-//             previousSelection.mesh.material = previousSelection.material;
-//             previousSelection.mesh = null;
-//             previousSelection.material = null;
-//         }
-//     }
+    function restorePreviousSelection() {
+        if(previousSelection.mesh) {
+            previousSelection.mesh.material = previousSelection.material;
+            previousSelection.mesh = null;
+            previousSelection.material = null;
+        }
+    }

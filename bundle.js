@@ -29952,6 +29952,62 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 }
 
+class MeshNormalMaterial extends Material {
+
+	constructor( parameters ) {
+
+		super();
+
+		this.isMeshNormalMaterial = true;
+
+		this.type = 'MeshNormalMaterial';
+
+		this.bumpMap = null;
+		this.bumpScale = 1;
+
+		this.normalMap = null;
+		this.normalMapType = TangentSpaceNormalMap;
+		this.normalScale = new Vector2( 1, 1 );
+
+		this.displacementMap = null;
+		this.displacementScale = 1;
+		this.displacementBias = 0;
+
+		this.wireframe = false;
+		this.wireframeLinewidth = 1;
+
+		this.flatShading = false;
+
+		this.setValues( parameters );
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.bumpMap = source.bumpMap;
+		this.bumpScale = source.bumpScale;
+
+		this.normalMap = source.normalMap;
+		this.normalMapType = source.normalMapType;
+		this.normalScale.copy( source.normalScale );
+
+		this.displacementMap = source.displacementMap;
+		this.displacementScale = source.displacementScale;
+		this.displacementBias = source.displacementBias;
+
+		this.wireframe = source.wireframe;
+		this.wireframeLinewidth = source.wireframeLinewidth;
+
+		this.flatShading = source.flatShading;
+
+		return this;
+
+	}
+
+}
+
 const AnimationUtils = {
 
 	// same as Array.prototype.slice, but also works on typed arrays
@@ -43305,7 +43361,6 @@ const subsetOfTHREE = {
     cameraDistanceFolder.add(cameraControls, 'distance', 1, 50, 1);
     //To open the tabs by default:
     cameraDistanceFolder.open();
-    console.log(cameraControls.getPosition());
 
 // 10 Add GLTF file to the scene
 
@@ -43345,7 +43400,6 @@ const subsetOfTHREE = {
                     loadingScreen.classList.add('hidden');
             },
             (progress) => {
-                console.log(progress);
                 const progressPercent = progress.loaded / progress.total * 100;
                 const formatted = Math.trunc(progressPercent); // Remove the decimals
                 progressText.textContent = `Loading: ${formatted} %`;
@@ -43354,66 +43408,80 @@ const subsetOfTHREE = {
                 console.log(error);
             });
 
-// // Picking
+// Picking
 
-//     // Objects we want to pick
-//     const objectsToPick = [gltf.scene];
+    const boxGeometry = new BoxGeometry();
+    const material = new MeshNormalMaterial();
+    const cube = new Mesh(boxGeometry, material);
+    cube.position.x = -10;
+    scene.add(cube);
 
-//     const raycaster = new Raycaster();
-//     const mouse = new Vector2();
+    // Objects we want to pick
+    const objectsToPick = [cube];
 
-//     // Previous Selection
-//     const previousSelection = {
-//         mesh : null,
-//         material: null
-//     }
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
 
-//     // Create a material to highlight the selected object
-//         const highlightMat = new MeshBasicMaterial({
-//             color: 'red',
-//             transparent: true,
-//             opacity: 0.75,
-//         });
+    // Previous Selection
+    const previousSelection = {
+        mesh : null,
+        material: null
+    };
 
-//     // Get Mouse position
-//     window.addEventListener('mousemove', (event) => {
-//         mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-//         mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+    // Create a material to highlight the selected object
+        const highlightMat = new MeshBasicMaterial({
+            color: 'red',
+            transparent: true,
+            opacity: 0.75,
+        });
 
-//     // Picking
-//         raycaster.setFromCamera(mouse, camera);
-//         const intersections = raycaster.intersectObjects(objectsToPick);
+    // Get Mouse position
+    window.addEventListener('mousemove', (event) => {
+        mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
+        mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+
+    // Picking
+        // raycaster.setFromCamera(mouse, camera);
+        let canvasBounds = canvas.getBoundingClientRect();
+        raycaster.setFromCamera(
+            {
+                x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+                y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+            },
+            camera
+        );
+        const intersections = raycaster.intersectObjects(objectsToPick);
         
-//         // intersection between mouse and material
-//         const hasCollided = intersections.length !== 0 ;
+        // intersection between mouse and material
+        const hasCollided = intersections.length !== 0 ;
 
-//         // if there is an intersection than highlight the material
-//         if(!hasCollided) {
-//             restorePreviousSelection();
-//             return;
-//         }
+        // if there is an intersection than highlight the material
+        if(!hasCollided) {
+            restorePreviousSelection();
+            return;
+        }
 
-//         const firstIntersection = intersections[0];
+        const firstIntersection = intersections[0];
 
-//         const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
-//         if(isPreviousSelection) return; 
+        const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
+        if(isPreviousSelection) return; 
 
-//         restorePreviousSelection();
+        restorePreviousSelection();
 
-//         savePreviousSelction(firstIntersection);
+        savePreviousSelction(firstIntersection);
 
-//         firstIntersection.object.material = highlightMat;
-//     })
+        firstIntersection.object.material = highlightMat;
+    });
 
-//     function savePreviousSelction(item) {
-//         previousSelection.mesh = item.object;
-//         previousSelection.material = item.object.material;
-//     }
+    function savePreviousSelction(item) {
+        previousSelection.mesh = item.object;
+        previousSelection.material = item.object.material;
+    }
 
-//     function restorePreviousSelection() {
-//         if(previousSelection.mesh) {
-//             previousSelection.mesh.material = previousSelection.material;
-//             previousSelection.mesh = null;
-//             previousSelection.material = null;
-//         }
-//     }
+    function restorePreviousSelection() {
+        if(previousSelection.mesh) {
+            previousSelection.mesh.material = previousSelection.material;
+            previousSelection.mesh = null;
+            previousSelection.material = null;
+        }
+    }
