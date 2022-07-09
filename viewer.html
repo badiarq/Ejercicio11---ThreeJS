@@ -37,17 +37,22 @@
             </div>
         </nav>
 
-        <div id="loader-container">
-            <div class="loader"></div>
-            <p id="progress-text">loading...</p>
+        <!-- Stats bar -->
+        <div class="stats-container col-12 col-md-9 col-lg-9 col-xxl-9 pt-3">
         </div>
 
         <!-- Viewer Section-->
         <div class="container">
             <div class="row viewerSection">
 
+                <!-- Loader  -->
+                <div id="loader-container">
+                    <div class="loader"></div>
+                    <p id="progress-text">loading...</p>
+                </div>
+
                 <!-- Viewer -->
-                <div id="viewer-container" class="bimViewer col-12 col-md-9 col-lg-9 col-xxl-9 py-3">
+                <div id="viewer-container" class="bimViewer col-12 col-md-9 col-lg-9 col-xxl-9">
                     <canvas id="three-canvas"></canvas>
                 </div>
 
@@ -115,10 +120,6 @@
                     </ul>
                 </div>
             </div>
-        </div>
-
-        <!-- Stats bar -->
-        <div class="stats-container col-12 col-md-9 col-lg-9 col-xxl-9">
         </div>
 
     <footer>

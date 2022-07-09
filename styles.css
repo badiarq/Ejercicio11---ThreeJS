@@ -30,10 +30,6 @@ body {
     padding-bottom: 2rem;
 }
 
-.container {
-    margin-top: var(--coverMargin);
-}
-
 .projectCard {
     position: relative;
     overflow: hidden;
