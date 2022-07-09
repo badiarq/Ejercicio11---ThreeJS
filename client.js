@@ -29,7 +29,8 @@ import {
     AmbientLight,
     EdgesGeometry,
     LineBasicMaterial,
-    LineSegments
+    LineSegments,
+    BufferGeometryLoader
   } from "three";
   
   import CameraControls from 'camera-controls';
@@ -54,13 +55,22 @@ import {
   const canvas = document.getElementById("three-canvas");
   
 // 1 The scene
-  const scene = new Scene();
-    // Give a color to the scene
-  scene.background = new THREE.Color(0xdedeee)
-    //Load Axes for the scene
+
+    // 1.0 Create a Scene
+    const scene = new Scene();
+    // 1.1 Give a color to the scene
+    scene.background = new THREE.Color(0xdedeee)
+
+    // 1.2 Load Axes for the scene
     const axes = new THREE.AxesHelper(5);
     axes.renderOrder = 2;
     scene.add(axes);
+
+    // 1.3 Grid
+    const grid = new THREE.GridHelper();
+    grid.material.depthTest = false;
+    // grid.renderOrder = 1;
+    scene.add(grid);
   
 // 2 The Object
 
@@ -117,22 +127,38 @@ import {
         renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     });
 
-// 7 Animate
+
+// 7 Stats 
+    const stats0 = Stats(0)
+    const stats1 = Stats(1)
+    const stats2 = Stats(2)
+
+    const statsBar0 = stats0.dom;
+    const statsBar1 = stats1.dom;
+    const statsBar2 = stats2.dom;
+    statsBar0.children.item(0).style.display = "flex";
+    statsBar1.children.item(1).style.display = "flex";
+    statsBar2.children.item(2).style.display = "flex";
+
+
+    const statsContainer= document.querySelector('.stats-container');
+    const firstStatBar = statsBar0.children.item(0);
+    const secondStatBar = statsBar1.children.item(1);
+    const ThirdStatBar = statsBar2.children.item(2);
+    statsContainer.append(firstStatBar, secondStatBar, ThirdStatBar);
+
+// 8 Animate
   
-    function animate() {
-        const delta = clock.getDelta();
-        cameraControls.update( delta );
-        renderer.render( scene, camera );
-        requestAnimationFrame(animate);
-    }
-    animate();
-
-// 8 Grid
-
-    const grid = new THREE.GridHelper();
-    grid.material.depthTest = false;
-    // grid.renderOrder = 1;
-    scene.add(grid);
+function animate() {
+    const delta = clock.getDelta();
+    cameraControls.update( delta );
+    renderer.render( scene, camera );
+    requestAnimationFrame(animate);
+    stats0.update()
+    stats1.update()
+    stats2.update()
+}
+animate();
 
 // 9 Load the Dat.GUI Panel
 

@@ -144,6 +144,12 @@ body {
     /* background-color:rgb(238, 238, 238); */
 }
 
+.stats-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
 .footerSection {
     background-color: var(--darkColor);
 }
