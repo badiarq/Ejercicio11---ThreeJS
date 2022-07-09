@@ -112,12 +112,8 @@ import {
     scene.add(ambientLight);
 
     const light1 = new DirectionalLight();
-    light1.position.set(2,1,3).normalize();
+    light1.position.set(5,10,3).normalize();
     scene.add(light1);
-
-    const light2 = new DirectionalLight();
-    light2.position.set(-3,2,-1).normalize();
-    scene.add(light2);
 
 // 6 Responsivity
 
