@@ -30,7 +30,8 @@ import {
     EdgesGeometry,
     LineBasicMaterial,
     LineSegments,
-    BufferGeometryLoader
+    BufferGeometryLoader,
+    SpotLight
   } from "three";
   
   import CameraControls from 'camera-controls';
@@ -75,6 +76,7 @@ import {
 // 2 The Object
 
 
+
 // 3 The Camera
 
     // 3.1 Create the camera
@@ -91,7 +93,7 @@ import {
     // 3.3 Set camera position (x, y , z) + camera target (x, y, z)
     cameraControls.setLookAt(-2, 2, 8, 0, 1, 0)
     // 3.4 Set the camera distance
-    cameraControls.distance = 10;
+    cameraControls.distance = 12;
 
     // 3.5 Add the camera to the scene
     scene.add(camera);
@@ -105,14 +107,46 @@ import {
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   
 // 5 Lights
   
+    // Create an AmbientLight
     const ambientLight = new AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const light1 = new DirectionalLight();
-    light1.position.set(5,10,3).normalize();
+    // Create a SpotLight
+    const light1 = new SpotLight(0xffffff, 1.5);
+    light1.position.set( 25, 20, 25 );
+    light1.angle = 0.5;
+    light1.penumbra = 0.25;
+    // Light target
+    light1.target.position.set(0,0,0);
+    scene.add(light1.target);
+
+    // Activate Shadows for the light
+    light1.castShadow = true;
+    light1.shadow.mapSize.width = 512;
+    light1.shadow.mapSize.height = 512;
+    light1.shadow.camera.near = 0.5;
+    light1.shadow.camera.far = 200;
+
+    const data = {
+        color: light1.color.getHex(0x000000),
+        mapsEnabled: true,
+        shadowMapSizeWidth: 512,
+        shadowMapSizeHeight: 512,
+    }
+
+    function updateShadowMapSize() {
+    light1.shadow.mapSize.width = data.shadowMapSizeWidth;
+    light1.shadow.mapSize.height = data.shadowMapSizeHeight;
+    light1.shadow.map = null;
+    }
+
+    // Add the light & the target to the scene
     scene.add(light1);
 
 // 6 Responsivity
@@ -122,7 +156,6 @@ import {
         camera.updateProjectionMatrix();
         renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     });
-
 
 // 7 Stats 
     const stats0 = Stats(0)
@@ -136,7 +169,6 @@ import {
     statsBar1.children.item(1).style.display = "flex";
     statsBar2.children.item(2).style.display = "flex";
 
-
     const statsContainer= document.querySelector('.stats-container');
     const firstStatBar = statsBar0.children.item(0);
     const secondStatBar = statsBar1.children.item(1);
@@ -148,13 +180,96 @@ import {
 function animate() {
     const delta = clock.getDelta();
     cameraControls.update( delta );
+    
     renderer.render( scene, camera );
+    
+    updateShadowMapSize()
+
     requestAnimationFrame(animate);
+    //reload stats panels
     stats0.update()
     stats1.update()
     stats2.update()
 }
 animate();
+
+// Picking
+
+const boxGeometry = new THREE.BoxGeometry()
+const material = new THREE.MeshNormalMaterial()
+const cube = new THREE.Mesh(boxGeometry, material)
+cube.position.x = -10
+scene.add(cube)
+cube.castShadow = true;
+
+
+
+const raycaster = new Raycaster();
+const mouse = new Vector2();
+
+// Previous Selection
+const previousSelection = {
+    mesh : null,
+    material: null
+}
+
+// Create a material to highlight the selected object
+    const highlightMat = new MeshBasicMaterial({
+        color: 'red',
+        transparent: true,
+        opacity: 0.5,
+    });
+
+// Get Mouse position
+window.addEventListener('mousemove', (event) => {
+    mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
+    mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+
+// Picking
+    // raycaster.setFromCamera(mouse, camera);
+    let canvasBounds = canvas.getBoundingClientRect()
+    raycaster.setFromCamera(
+        {
+            x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+            y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+        },
+        camera
+    )
+    const intersections = raycaster.intersectObjects(objectsToPick);
+    
+    // intersection between mouse and material
+    const hasCollided = intersections.length !== 0 ;
+
+    // if there is an intersection than highlight the material
+    if(!hasCollided) {
+        restorePreviousSelection();
+        return;
+    }
+
+    const firstIntersection = intersections[0];
+
+    const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
+    if(isPreviousSelection) return; 
+
+    restorePreviousSelection();
+
+    savePreviousSelction(firstIntersection);
+
+    firstIntersection.object.material = highlightMat;
+})
+
+function savePreviousSelction(item) {
+    previousSelection.mesh = item.object;
+    previousSelection.material = item.object.material;
+}
+
+function restorePreviousSelection() {
+    if(previousSelection.mesh) {
+        previousSelection.mesh.material = previousSelection.material;
+        previousSelection.mesh = null;
+        previousSelection.material = null;
+    }
+}
 
 // 9 Load the Dat.GUI Panel
 
@@ -214,18 +329,35 @@ animate();
         // Get the loader text from html
         const progressText = document.getElementById('progress-text');
 
+        const objectsToPick = [];
+
         // Load the file
         loader.load( '/Items/house/scene.gltf',
 
             (gltf) => {
+
+                // Objects we want to pick
+                gltf.scene.traverse( function(node) {
+                    if (node.isMesh){
+                        objectsToPick.push(node);
+                    }
+                });
+
                 // Modify the position of the Geometry
                     gltf.scene.position.x = -70;
                     gltf.scene.position.y = -13;
                     gltf.scene.position.z = -37;
                 // Add position controls to the GUI
-                    HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 5)
-                    HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 5)
-                    HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 5)
+                    HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 1)
+                    HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 1)
+                    HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 1)
+                // Receive lights and display a shadow for the gltf objects
+                gltf.scene.traverse( function(node) {
+                    if (node.isMesh){
+                        node.castShadow = true; 
+                        node.receiveShadow = true;
+                    }
+                });
                 // Add the Geometry to the scene
                     scene.add(gltf.scene);
                 // Add the loader symbol
@@ -239,81 +371,3 @@ animate();
             (error) => {
                 console.log(error);
             })
-
-// Picking
-
-    const boxGeometry = new THREE.BoxGeometry()
-    const material = new THREE.MeshNormalMaterial()
-    const cube = new THREE.Mesh(boxGeometry, material)
-    cube.position.x = -10
-    scene.add(cube)
-
-    // Objects we want to pick
-    const objectsToPick = [cube];
-
-    const raycaster = new Raycaster();
-    const mouse = new Vector2();
-
-    // Previous Selection
-    const previousSelection = {
-        mesh : null,
-        material: null
-    }
-
-    // Create a material to highlight the selected object
-        const highlightMat = new MeshBasicMaterial({
-            color: 'red',
-            transparent: true,
-            opacity: 0.75,
-        });
-
-    // Get Mouse position
-    window.addEventListener('mousemove', (event) => {
-        mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-        mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
-
-    // Picking
-        // raycaster.setFromCamera(mouse, camera);
-        let canvasBounds = canvas.getBoundingClientRect()
-        raycaster.setFromCamera(
-            {
-                x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
-                y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
-            },
-            camera
-        )
-        const intersections = raycaster.intersectObjects(objectsToPick);
-        
-        // intersection between mouse and material
-        const hasCollided = intersections.length !== 0 ;
-
-        // if there is an intersection than highlight the material
-        if(!hasCollided) {
-            restorePreviousSelection();
-            return;
-        }
-
-        const firstIntersection = intersections[0];
-
-        const isPreviousSelection = previousSelection.mesh === firstIntersection.object;
-        if(isPreviousSelection) return; 
-
-        restorePreviousSelection();
-
-        savePreviousSelction(firstIntersection);
-
-        firstIntersection.object.material = highlightMat;
-    })
-
-    function savePreviousSelction(item) {
-        previousSelection.mesh = item.object;
-        previousSelection.material = item.object.material;
-    }
-
-    function restorePreviousSelection() {
-        if(previousSelection.mesh) {
-            previousSelection.mesh.material = previousSelection.material;
-            previousSelection.mesh = null;
-            previousSelection.material = null;
-        }
-    }
