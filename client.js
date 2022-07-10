@@ -4,6 +4,8 @@ import Stats from 'three/examples/jsm/libs/stats.module'
 //Import Dat.GUI Panel to be able to manipulate a 3D object directly in the page
 import { GUI } from 'dat.gui'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import CameraControls from 'camera-controls';
+import { index } from 'hold-event/dist/hold-event.min.js'
 import {
     Scene,
     BoxGeometry,
@@ -33,8 +35,6 @@ import {
     BufferGeometryLoader,
     SpotLight
   } from "three";
-  
-  import CameraControls from 'camera-controls';
   
   const subsetOfTHREE = {
     MOUSE,
@@ -100,6 +100,36 @@ import {
         // Polar Angle
         cameraControls.minPolarAngle = Math.PI / 4;
         cameraControls.maxPolarAngle = 0.55 * Math.PI;
+
+        // Keyboards keys to navigate
+        const KEYCODE = {
+            W: 87,
+            A: 65,
+            S: 83,
+            D: 68,
+            ARROW_LEFT : 37,
+            ARROW_UP   : 38,
+            ARROW_RIGHT: 39,
+            ARROW_DOWN : 40,
+        };
+        
+        const wKey = new holdEvent.KeyboardKeyHold( KEYCODE.W, 16.666 );
+        const aKey = new holdEvent.KeyboardKeyHold( KEYCODE.A, 16.666 );
+        const sKey = new holdEvent.KeyboardKeyHold( KEYCODE.S, 16.666 );
+        const dKey = new holdEvent.KeyboardKeyHold( KEYCODE.D, 16.666 );
+        aKey.addEventListener( 'holding', function( event ) { cameraControls.truck( - 0.01 * event.deltaTime, 0, false ) } );
+        dKey.addEventListener( 'holding', function( event ) { cameraControls.truck(   0.01 * event.deltaTime, 0, false ) } );
+        wKey.addEventListener( 'holding', function( event ) { cameraControls.forward(   0.01 * event.deltaTime, false ) } );
+        sKey.addEventListener( 'holding', function( event ) { cameraControls.forward( - 0.01 * event.deltaTime, false ) } );
+        
+        const leftKey  = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_LEFT,  100 );
+        const rightKey = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_RIGHT, 100 );
+        const upKey    = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_UP,    100 );
+        const downKey  = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_DOWN,  100 );
+        leftKey.addEventListener ( 'holding', function( event ) { cameraControls.rotate( - 0.1 * THREE.MathUtils.DEG2RAD * event.deltaTime, 0, true ) } );
+        rightKey.addEventListener( 'holding', function( event ) { cameraControls.rotate(   0.1 * THREE.MathUtils.DEG2RAD * event.deltaTime, 0, true ) } );
+        upKey.addEventListener   ( 'holding', function( event ) { cameraControls.rotate( 0, - 0.05 * THREE.MathUtils.DEG2RAD * event.deltaTime, true ) } );
+        downKey.addEventListener ( 'holding', function( event ) { cameraControls.rotate( 0,   0.05 * THREE.MathUtils.DEG2RAD * event.deltaTime, true ) } );
 
     // 3.3 Set camera position (x, y , z) + camera target (x, y, z)
     cameraControls.setLookAt(-2, 2, 8, 0, 1, 0)
