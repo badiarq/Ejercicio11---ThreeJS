@@ -375,26 +375,54 @@ function restorePreviousSelection() {
                 // Add the loader symbol
                 loadingScreen.classList.add('hidden');
 
-                // Get the model3D by name
-                function getbytagname(children_tag_name){
-                    let x = [] ;
-                    for(var i =0; i < scene.children.length; i++)
-                     {
-                      if(scene.children[i].name === children_tag_name){
-                       x.push(scene.children[i]);
-                      }
-                     };
-                    return x;
-                }
-                const model3D = getbytagname("Sketchfab_Scene");
+                // Tools Bar
+                    // Get the model3D by name
+                    function getbytagname(children_tag_name){
+                        let x = [] ;
+                        for(var i =0; i < scene.children.length; i++)
+                        {
+                        if(scene.children[i].name === children_tag_name){
+                        x.push(scene.children[i]);
+                        }
+                        };
+                        return x;
+                    }
+                    const model3D = getbytagname("Sketchfab_Scene");
 
-                // Fit Camera to the model bounding Box
-                const fitbutton = document.getElementById("fit-button");
+                    // Fit Camera to the model bounding Box
+                    const fitViewButton = document.getElementById("fit-view");
+                    fitViewButton.onclick = () => {
+                        cameraControls.fitToBox(model3D[0], true, {paddingTop:20, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                        cameraControls.setTarget(0, 0, 0);
+                    }
 
-                fitbutton.onclick = () => {
-                    cameraControls.fitToBox(model3D[0], true, {paddingTop:20, paddingLeft: 0, paddingBottom:0, paddingRight:0});
-                    cameraControls.setTarget(0, 0, 0);
-                }
+                    // Left View
+                    const leftViewButton = document.getElementById("left-view");
+                    leftViewButton.onclick = () => {
+                        cameraControls.setLookAt(-50, 2.7, 0, 0, 0, 0);
+                        cameraControls.fitToBox(model3D[0], true, {paddingTop:2.7, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                    }
+
+                    // Front View
+                    const frontViewButton = document.getElementById("front-view");
+                    frontViewButton.onclick = () => {
+                        cameraControls.setLookAt(0, 2.7, 20, 0, 0, 0);
+                        cameraControls.fitToBox(model3D[0], true, {paddingTop:2.7, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                    }
+                    
+                    // Right View
+                    const rightViewButton = document.getElementById("right-view");
+                    rightViewButton.onclick = () => {
+                        cameraControls.setLookAt(50, 2.7, 0, 0, 0, 0);
+                        cameraControls.fitToBox(model3D[0], true, {paddingTop:2.7, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                    }
+
+                    // Back View
+                    const backViewButton = document.getElementById("back-view");
+                    backViewButton.onclick = () => {
+                        cameraControls.setLookAt(0, 2.7, -20, 0, 0, 0);
+                        cameraControls.fitToBox(model3D[0], true, {paddingTop:2.7, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                    }
 
                 // Objects we want to pick
                 gltf.scene.traverse( function(node) {

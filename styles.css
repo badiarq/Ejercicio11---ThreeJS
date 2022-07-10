@@ -134,13 +134,13 @@ body {
     position: absolute;
     bottom: 0;
     padding: 1rem;
-    width: 100%;
+    /* width: 100%; */
     justify-content: space-evenly;
 }
 
-.button-item {
+/* .button-item {
     width: 100%;
-}
+} */
 
 .tool-button {
     display: flex;
@@ -150,11 +150,14 @@ body {
     cursor: pointer;
     width: 40px;
     height: 40px;
-    background-image: linear-gradient(to top, #D8D9DB 0%, #fff 80%, #FDFDFD 100%);
+    margin-left: 0.5rem;
     border-radius: 30px;
     border: 1px solid #8F9092;
     transition: all 0.2s ease;
     color: #606060;
+    background-size: 80%;
+    background-position: center;
+    background-repeat: no-repeat;
 }
   
 .tool-button:hover {
@@ -165,10 +168,24 @@ body {
     box-shadow: 0 4px 3px 1px var(--viewerBackground), 0 6px 8px var(--viewerBackground), 0 -4px 4px #dce0e8, 0 -6px 4px var(--viewerBackground), inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
 }
 
-#fit-button {
+#fit-view {
     background-image: url("./img/icon-fit.png");
-    background-size: 85%;
-    background-position: center;
+}
+
+#left-view {
+    background-image: url("./img/icon-left.png");
+}
+
+#front-view {
+    background-image: url("./img/icon-front.png"); 
+}
+
+#right-view {
+    background-image: url("./img/icon-right.png");
+}
+
+#back-view {
+    background-image: url("./img/icon-back.png");
 }
 
 .bimViewer {
