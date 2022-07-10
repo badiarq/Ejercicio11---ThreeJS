@@ -11,6 +11,7 @@
     --principalColor: #d9d5e7;
     --secondaryColor: #e7a377;
     --darkColor: #212529;
+    --viewerBackground: #dedeee;
 }
 
 img {
@@ -122,6 +123,52 @@ body {
 
 .viewerPage {
     background-color: var(--backgroundColor)
+}
+
+.tools-container {
+    position: relative;
+}
+
+.buttons-container {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    padding: 1rem;
+    width: 100%;
+    justify-content: space-evenly;
+}
+
+.button-item {
+    width: 100%;
+}
+
+.tool-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    background-image: linear-gradient(to top, #D8D9DB 0%, #fff 80%, #FDFDFD 100%);
+    border-radius: 30px;
+    border: 1px solid #8F9092;
+    transition: all 0.2s ease;
+    color: #606060;
+}
+  
+.tool-button:hover {
+    box-shadow: 0 4px 3px 1px var(--viewerBackground), 0 6px 8px var(--viewerBackground), 0 -4px 4px #dce0e8, 0 -6px 4px var(--viewerBackground), inset 0 0 3px 3px #CECFD1;
+}
+  
+.tool-button:active {
+    box-shadow: 0 4px 3px 1px var(--viewerBackground), 0 6px 8px var(--viewerBackground), 0 -4px 4px #dce0e8, 0 -6px 4px var(--viewerBackground), inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
+}
+
+#fit-button {
+    background-image: url("./img/icon-fit.png");
+    background-size: 85%;
+    background-position: center;
 }
 
 .bimViewer {

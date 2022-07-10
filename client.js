@@ -375,6 +375,27 @@ function restorePreviousSelection() {
                 // Add the loader symbol
                 loadingScreen.classList.add('hidden');
 
+                // Get the model3D by name
+                function getbytagname(children_tag_name){
+                    let x = [] ;
+                    for(var i =0; i < scene.children.length; i++)
+                     {
+                      if(scene.children[i].name === children_tag_name){
+                       x.push(scene.children[i]);
+                      }
+                     };
+                    return x;
+                }
+                const model3D = getbytagname("Sketchfab_Scene");
+
+                // Fit Camera to the model bounding Box
+                const fitbutton = document.getElementById("fit-button");
+
+                fitbutton.onclick = () => {
+                    cameraControls.fitToBox(model3D[0], true, {paddingTop:20, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                    cameraControls.setTarget(0, 0, 0);
+                }
+
                 // Objects we want to pick
                 gltf.scene.traverse( function(node) {
                     if (node.isMesh){
