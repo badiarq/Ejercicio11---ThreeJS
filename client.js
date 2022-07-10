@@ -90,6 +90,17 @@ import {
     const clock = new Clock();
     const cameraControls = new CameraControls(camera, canvas);
 
+        // Min and Max DOLLY ("Zoom")
+        cameraControls.minDistance = 3;
+        cameraControls.maxDistance = 30;
+        // Mouse controls
+        cameraControls.mouseButtons.middle = CameraControls.ACTION.TRUCK;
+        cameraControls.mouseButtons.right = CameraControls.ACTION.DOLLY;
+        cameraControls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
+        // Polar Angle
+        cameraControls.minPolarAngle = Math.PI / 4;
+        cameraControls.maxPolarAngle = 0.55 * Math.PI;
+
     // 3.3 Set camera position (x, y , z) + camera target (x, y, z)
     cameraControls.setLookAt(-2, 2, 8, 0, 1, 0)
     // 3.4 Set the camera distance
@@ -275,6 +286,7 @@ function restorePreviousSelection() {
     }
 }
 
+
 // 9 Load the Dat.GUI Panel
 
     // //Create a transparency section
@@ -340,21 +352,18 @@ function restorePreviousSelection() {
 
             (gltf) => {
 
-                // Objects we want to pick
-                gltf.scene.traverse( function(node) {
-                    if (node.isMesh){
-                        objectsToPick.push(node);
-                    }
-                });
+                // Add the Geometry to the scene
+                    scene.add(gltf.scene);
 
                 // Modify the position of the Geometry
-                    gltf.scene.position.x = -70;
-                    gltf.scene.position.y = -13;
-                    gltf.scene.position.z = -37;
+                const displacementVector = new THREE.Vector3(-72, -13, -37);
+                gltf.scene.position.copy(displacementVector);
+
                 // Add position controls to the GUI
-                    HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 1)
-                    HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 1)
-                    HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 1)
+                HousePositionFolder.add(gltf.scene.position, 'x', -100, 100, 1)
+                HousePositionFolder.add(gltf.scene.position, 'y', -100, 100, 1)
+                HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 1)
+
                 // Receive lights and display a shadow for the gltf objects
                 gltf.scene.traverse( function(node) {
                     if (node.isMesh){
@@ -362,10 +371,17 @@ function restorePreviousSelection() {
                         node.receiveShadow = true;
                     }
                 });
-                // Add the Geometry to the scene
-                    scene.add(gltf.scene);
+
                 // Add the loader symbol
-                    loadingScreen.classList.add('hidden');
+                loadingScreen.classList.add('hidden');
+
+                // Objects we want to pick
+                gltf.scene.traverse( function(node) {
+                    if (node.isMesh){
+                        objectsToPick.push(node);
+                    }
+                });
+
             },
             (progress) => {
                 const progressPercent = progress.loaded / progress.total * 100;
