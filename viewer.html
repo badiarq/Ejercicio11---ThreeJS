@@ -51,31 +51,51 @@
                     <p id="progress-text">loading...</p>
                 </div>
 
-                <!-- Viewer -->
-                <div id="viewer-container" class="bimViewer col-12 col-md-9 col-lg-9 col-xxl-9">
-                    <div class="tools-container">
-                        <div class="buttons-container ">
-                            <div class="button-item">
-                                <button id="fit-view" class="tool-button"></button>
-                            </div>
-                            <div class="button-item">
-                                <button id="left-view" class="tool-button"></button>
-                            </div>
-                            <div class="button-item">
-                                <button id="front-view" class="tool-button"></button>
-                            </div>
-                            <div class="button-item">
-                                <button id="right-view" class="tool-button"></button>
-                            </div>
-                            <div class="button-item">
-                                <button id="back-view" class="tool-button"></button>
+                <!-- Viewer Container -->
+                <div class="viewer-container col-12 col-md-9 col-lg-9 col-xxl-9">
+
+                    <!-- keyboard keys description -->
+                    <div class="container">
+                        <div class="row">
+                            <div class="viewer-description col-12">
+                                <p>W, A, S, D keys to move</p>
+                                <p>arrow keys (left, right, up, down) to rotate</p>
                             </div>
                         </div>
                     </div>
-                    <canvas id="three-canvas"></canvas>
+
+                    <!-- Model Viewer -->
+                    <div id="viewer-container" class="bimViewer">
+                        <canvas id="three-canvas"></canvas>
+                    </div>
+
+                    <!-- Tools Viewer -->
+                    <div class="container">
+                        <div class="row">
+                            <div class="tools-container col-12">
+                                <div class="buttons-container ">
+                                    <div class="button-item">
+                                        <button id="fit-view" class="tool-button"></button>
+                                    </div>
+                                    <div class="button-item">
+                                        <button id="left-view" class="tool-button"></button>
+                                    </div>
+                                    <div class="button-item">
+                                        <button id="front-view" class="tool-button"></button>
+                                    </div>
+                                    <div class="button-item">
+                                        <button id="right-view" class="tool-button"></button>
+                                    </div>
+                                    <div class="button-item">
+                                        <button id="back-view" class="tool-button"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- left Menu -->
+                <!-- Right Menu -->
                 <div class="col-12 col-md-3 col-lg-3 col-xxl-3">
                     <ul class="projectList">
 
