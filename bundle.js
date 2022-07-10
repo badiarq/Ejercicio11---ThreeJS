@@ -43532,14 +43532,18 @@ const subsetOfTHREE = {
 // 8 Animate
   
 function animate() {
+    // update the time for camera-controls
     const delta = clock.getDelta();
+    // update camera-controls
     cameraControls.update( delta );
     
+    requestAnimationFrame(animate);
+    //render Scene and camera
     renderer.render( scene, camera );
     
+    // update shadow Size
     updateShadowMapSize();
 
-    requestAnimationFrame(animate);
     //reload stats panels
     stats0.update();
     stats1.update();
