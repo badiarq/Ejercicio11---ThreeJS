@@ -6,6 +6,7 @@ import { GUI } from 'dat.gui'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import CameraControls from 'camera-controls';
 import { index } from 'hold-event/dist/hold-event.min.js'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import {
     Scene,
     BoxGeometry,
@@ -75,6 +76,12 @@ import {
   
 // 2 The Object
 
+    const boxGeometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshNormalMaterial({transparent: true});
+    const cube = new THREE.Mesh(boxGeometry, material);
+    cube.position.z = 3;
+    scene.add(cube);
+    cube.castShadow = true;
 
 
 // 3 The Camera
@@ -112,7 +119,7 @@ import {
             ARROW_RIGHT: 39,
             ARROW_DOWN : 40,
         };
-        
+
         const wKey = new holdEvent.KeyboardKeyHold( KEYCODE.W, 16.666 );
         const aKey = new holdEvent.KeyboardKeyHold( KEYCODE.A, 16.666 );
         const sKey = new holdEvent.KeyboardKeyHold( KEYCODE.S, 16.666 );
@@ -138,7 +145,7 @@ import {
 
     // 3.5 Add the camera to the scene
     scene.add(camera);
-  
+
 // 4 The Renderer
 
     const renderer = new WebGLRenderer({
@@ -239,15 +246,6 @@ function animate() {
 animate();
 
 // Picking
-
-const boxGeometry = new THREE.BoxGeometry()
-const material = new THREE.MeshNormalMaterial()
-const cube = new THREE.Mesh(boxGeometry, material)
-cube.position.x = -10
-scene.add(cube)
-cube.castShadow = true;
-
-
 
 const raycaster = new Raycaster();
 const mouse = new Vector2();
@@ -470,3 +468,14 @@ function restorePreviousSelection() {
             (error) => {
                 console.log(error);
             })
+
+// Drag Controls
+const controls = new DragControls([cube], camera, renderer.domElement)
+controls.addEventListener('dragstart', function (event) {
+    event.object.material.opacity = 0.5;
+    cameraControls.enabled = false;
+})
+controls.addEventListener('dragend', function (event) {
+    event.object.material.opacity = 1
+    cameraControls.enabled = true;
+})

@@ -9599,7 +9599,7 @@ let _id$1 = 0;
 
 const _m1 = /*@__PURE__*/ new Matrix4();
 const _obj = /*@__PURE__*/ new Object3D();
-const _offset = /*@__PURE__*/ new Vector3();
+const _offset$1 = /*@__PURE__*/ new Vector3();
 const _box$1 = /*@__PURE__*/ new Box3();
 const _boxMorphTargets = /*@__PURE__*/ new Box3();
 const _vector$8 = /*@__PURE__*/ new Vector3();
@@ -9847,9 +9847,9 @@ class BufferGeometry extends EventDispatcher$1 {
 
 		this.computeBoundingBox();
 
-		this.boundingBox.getCenter( _offset ).negate();
+		this.boundingBox.getCenter( _offset$1 ).negate();
 
-		this.translate( _offset.x, _offset.y, _offset.z );
+		this.translate( _offset$1.x, _offset$1.y, _offset$1.z );
 
 		return this;
 
@@ -10029,8 +10029,8 @@ class BufferGeometry extends EventDispatcher$1 {
 
 						if ( morphTargetsRelative ) {
 
-							_offset.fromBufferAttribute( position, j );
-							_vector$8.add( _offset );
+							_offset$1.fromBufferAttribute( position, j );
+							_vector$8.add( _offset$1 );
 
 						}
 
@@ -29485,7 +29485,7 @@ class PointsMaterial extends Material {
 
 }
 
-const _inverseMatrix = /*@__PURE__*/ new Matrix4();
+const _inverseMatrix$3 = /*@__PURE__*/ new Matrix4();
 const _ray = /*@__PURE__*/ new Ray();
 const _sphere$4 = /*@__PURE__*/ new Sphere();
 const _position$2 = /*@__PURE__*/ new Vector3();
@@ -29537,8 +29537,8 @@ class Points extends Object3D {
 
 		//
 
-		_inverseMatrix.copy( matrixWorld ).invert();
-		_ray.copy( raycaster.ray ).applyMatrix4( _inverseMatrix );
+		_inverseMatrix$3.copy( matrixWorld ).invert();
+		_ray.copy( raycaster.ray ).applyMatrix4( _inverseMatrix$3 );
 
 		const localThreshold = threshold / ( ( this.scale.x + this.scale.y + this.scale.z ) / 3 );
 		const localThresholdSq = localThreshold * localThreshold;
@@ -41517,7 +41517,7 @@ let _sphere;
 let _quaternionA;
 let _quaternionB;
 let _rotationMatrix;
-let _raycaster;
+let _raycaster$1;
 class CameraControls extends EventDispatcher {
     /**
      * Creates a `CameraControls` instance.
@@ -42256,7 +42256,7 @@ class CameraControls extends EventDispatcher {
         _quaternionA = new THREE.Quaternion();
         _quaternionB = new THREE.Quaternion();
         _rotationMatrix = new THREE.Matrix4();
-        _raycaster = new THREE.Raycaster();
+        _raycaster$1 = new THREE.Raycaster();
     }
     /**
      * list all ACTIONs
@@ -43305,9 +43305,9 @@ class CameraControls extends EventDispatcher {
             const nearPlaneCorner = _v3B.copy(this._nearPlaneCorners[i]);
             nearPlaneCorner.applyMatrix4(_rotationMatrix);
             const origin = _v3C.addVectors(this._target, nearPlaneCorner);
-            _raycaster.set(origin, direction);
-            _raycaster.far = this._spherical.radius + 1;
-            const intersects = _raycaster.intersectObjects(this.colliderMeshes);
+            _raycaster$1.set(origin, direction);
+            _raycaster$1.far = this._spherical.radius + 1;
+            const intersects = _raycaster$1.intersectObjects(this.colliderMeshes);
             if (intersects.length !== 0 && intersects[0].distance < distance) {
                 distance = intersects[0].distance;
             }
@@ -43398,6 +43398,216 @@ function createBoundingSphere(object3d, out) {
  */
 (function(global,factory){typeof exports==="object"&&typeof module!=="undefined"?factory(exports):typeof define==="function"&&define.amd?define(["exports"],factory):(global=typeof globalThis!=="undefined"?globalThis:global||self,factory(global.holdEvent={}));})(undefined,(function(exports){exports.HOLD_EVENT_TYPE=void 0;(function(HOLD_EVENT_TYPE){HOLD_EVENT_TYPE["HOLD_START"]="holdStart";HOLD_EVENT_TYPE["HOLD_END"]="holdEnd";HOLD_EVENT_TYPE["HOLDING"]="holding";})(exports.HOLD_EVENT_TYPE||(exports.HOLD_EVENT_TYPE={}));class EventDispatcher{constructor(){this._listeners={};}addEventListener(type,listener){const listeners=this._listeners;if(listeners[type]===undefined)listeners[type]=[];if(listeners[type].indexOf(listener)===-1)listeners[type].push(listener);}removeEventListener(type,listener){const listeners=this._listeners;const listenerArray=listeners[type];if(listenerArray!==undefined){const index=listenerArray.indexOf(listener);if(index!==-1)listenerArray.splice(index,1);}}dispatchEvent(event){const listeners=this._listeners;const listenerArray=listeners[event.type];if(listenerArray!==undefined){event.target=this;const array=listenerArray.slice(0);for(let i=0,l=array.length;i<l;i++){array[i].call(this,event);}}}}class Hold extends EventDispatcher{constructor(holdIntervalDelay){super();this._enabled=true;this._holding=false;this._intervalId=-1;this._deltaTime=0;this._elapsedTime=0;this._lastTime=0;this._holdStart=event=>{if(!this._enabled)return;if(this._holding)return;this._deltaTime=0;this._elapsedTime=0;this._lastTime=performance.now();this.dispatchEvent({type:exports.HOLD_EVENT_TYPE.HOLD_START,deltaTime:this._deltaTime,elapsedTime:this._elapsedTime,originalEvent:event});this._holding=true;const cb=()=>{this._intervalId=!!this.holdIntervalDelay?window.setTimeout(cb,this.holdIntervalDelay):window.requestAnimationFrame(cb);const now=performance.now();this._deltaTime=now-this._lastTime;this._elapsedTime+=this._deltaTime;this._lastTime=performance.now();this.dispatchEvent({type:exports.HOLD_EVENT_TYPE.HOLDING,deltaTime:this._deltaTime,elapsedTime:this._elapsedTime,originalEvent:event});};this._intervalId=!!this.holdIntervalDelay?window.setTimeout(cb,this.holdIntervalDelay):window.requestAnimationFrame(cb);};this._holdEnd=event=>{if(!this._enabled)return;if(!this._holding)return;const now=performance.now();this._deltaTime=now-this._lastTime;this._elapsedTime+=this._deltaTime;this._lastTime=performance.now();this.dispatchEvent({type:exports.HOLD_EVENT_TYPE.HOLD_END,deltaTime:this._deltaTime,elapsedTime:this._elapsedTime,originalEvent:event});window.clearTimeout(this._intervalId);window.cancelAnimationFrame(this._intervalId);this._holding=false;};this.holdIntervalDelay=holdIntervalDelay;}get enabled(){return this._enabled}set enabled(enabled){if(this._enabled===enabled)return;this._enabled=enabled;if(!this._enabled)this._holdEnd();}}class ElementHold extends Hold{constructor(element,holdIntervalDelay){super(holdIntervalDelay);this._holdStart=this._holdStart.bind(this);this._holdEnd=this._holdEnd.bind(this);const onPointerDown=this._holdStart;const onPointerUp=this._holdEnd;element.addEventListener("mousedown",onPointerDown);document.addEventListener("mouseup",onPointerUp);window.addEventListener("blur",this._holdEnd);}}class KeyboardKeyHold extends Hold{constructor(keyCode,holdIntervalDelay){super(holdIntervalDelay);this._holdStart=this._holdStart.bind(this);this._holdEnd=this._holdEnd.bind(this);const onKeydown=event=>{if(isInputEvent(event))return;if(event.keyCode!==keyCode)return;this._holdStart(event);};const onKeyup=event=>{if(event.keyCode!==keyCode)return;this._holdEnd(event);};document.addEventListener("keydown",onKeydown);document.addEventListener("keyup",onKeyup);window.addEventListener("blur",this._holdEnd);}}function isInputEvent(event){const target=event.target;return target.tagName==="INPUT"||target.tagName==="SELECT"||target.tagName==="TEXTAREA"||target.isContentEditable}exports.ElementHold=ElementHold;exports.KeyboardKeyHold=KeyboardKeyHold;Object.defineProperty(exports,"__esModule",{value:true});}));
 
+const _plane = new Plane();
+const _raycaster = new Raycaster();
+
+const _pointer = new Vector2();
+const _offset = new Vector3();
+const _intersection = new Vector3();
+const _worldPosition = new Vector3();
+const _inverseMatrix = new Matrix4();
+
+class DragControls extends EventDispatcher$1 {
+
+	constructor( _objects, _camera, _domElement ) {
+
+		super();
+
+		_domElement.style.touchAction = 'none'; // disable touch scroll
+
+		let _selected = null, _hovered = null;
+
+		const _intersections = [];
+
+		//
+
+		const scope = this;
+
+		function activate() {
+
+			_domElement.addEventListener( 'pointermove', onPointerMove );
+			_domElement.addEventListener( 'pointerdown', onPointerDown );
+			_domElement.addEventListener( 'pointerup', onPointerCancel );
+			_domElement.addEventListener( 'pointerleave', onPointerCancel );
+
+		}
+
+		function deactivate() {
+
+			_domElement.removeEventListener( 'pointermove', onPointerMove );
+			_domElement.removeEventListener( 'pointerdown', onPointerDown );
+			_domElement.removeEventListener( 'pointerup', onPointerCancel );
+			_domElement.removeEventListener( 'pointerleave', onPointerCancel );
+
+			_domElement.style.cursor = '';
+
+		}
+
+		function dispose() {
+
+			deactivate();
+
+		}
+
+		function getObjects() {
+
+			return _objects;
+
+		}
+
+		function getRaycaster() {
+
+			return _raycaster;
+
+		}
+
+		function onPointerMove( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			updatePointer( event );
+
+			_raycaster.setFromCamera( _pointer, _camera );
+
+			if ( _selected ) {
+
+				if ( _raycaster.ray.intersectPlane( _plane, _intersection ) ) {
+
+					_selected.position.copy( _intersection.sub( _offset ).applyMatrix4( _inverseMatrix ) );
+
+				}
+
+				scope.dispatchEvent( { type: 'drag', object: _selected } );
+
+				return;
+
+			}
+
+			// hover support
+
+			if ( event.pointerType === 'mouse' || event.pointerType === 'pen' ) {
+
+				_intersections.length = 0;
+
+				_raycaster.setFromCamera( _pointer, _camera );
+				_raycaster.intersectObjects( _objects, true, _intersections );
+
+				if ( _intersections.length > 0 ) {
+
+					const object = _intersections[ 0 ].object;
+
+					_plane.setFromNormalAndCoplanarPoint( _camera.getWorldDirection( _plane.normal ), _worldPosition.setFromMatrixPosition( object.matrixWorld ) );
+
+					if ( _hovered !== object && _hovered !== null ) {
+
+						scope.dispatchEvent( { type: 'hoveroff', object: _hovered } );
+
+						_domElement.style.cursor = 'auto';
+						_hovered = null;
+
+					}
+
+					if ( _hovered !== object ) {
+
+						scope.dispatchEvent( { type: 'hoveron', object: object } );
+
+						_domElement.style.cursor = 'pointer';
+						_hovered = object;
+
+					}
+
+				} else {
+
+					if ( _hovered !== null ) {
+
+						scope.dispatchEvent( { type: 'hoveroff', object: _hovered } );
+
+						_domElement.style.cursor = 'auto';
+						_hovered = null;
+
+					}
+
+				}
+
+			}
+
+		}
+
+		function onPointerDown( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			updatePointer( event );
+
+			_intersections.length = 0;
+
+			_raycaster.setFromCamera( _pointer, _camera );
+			_raycaster.intersectObjects( _objects, true, _intersections );
+
+			if ( _intersections.length > 0 ) {
+
+				_selected = ( scope.transformGroup === true ) ? _objects[ 0 ] : _intersections[ 0 ].object;
+
+				_plane.setFromNormalAndCoplanarPoint( _camera.getWorldDirection( _plane.normal ), _worldPosition.setFromMatrixPosition( _selected.matrixWorld ) );
+
+				if ( _raycaster.ray.intersectPlane( _plane, _intersection ) ) {
+
+					_inverseMatrix.copy( _selected.parent.matrixWorld ).invert();
+					_offset.copy( _intersection ).sub( _worldPosition.setFromMatrixPosition( _selected.matrixWorld ) );
+
+				}
+
+				_domElement.style.cursor = 'move';
+
+				scope.dispatchEvent( { type: 'dragstart', object: _selected } );
+
+			}
+
+
+		}
+
+		function onPointerCancel() {
+
+			if ( scope.enabled === false ) return;
+
+			if ( _selected ) {
+
+				scope.dispatchEvent( { type: 'dragend', object: _selected } );
+
+				_selected = null;
+
+			}
+
+			_domElement.style.cursor = _hovered ? 'pointer' : 'auto';
+
+		}
+
+		function updatePointer( event ) {
+
+			const rect = _domElement.getBoundingClientRect();
+
+			_pointer.x = ( event.clientX - rect.left ) / rect.width * 2 - 1;
+			_pointer.y = - ( event.clientY - rect.top ) / rect.height * 2 + 1;
+
+		}
+
+		activate();
+
+		// API
+
+		this.enabled = true;
+		this.transformGroup = false;
+
+		this.activate = activate;
+		this.deactivate = deactivate;
+		this.dispose = dispose;
+		this.getObjects = getObjects;
+		this.getRaycaster = getRaycaster;
+
+	}
+
+}
+
 const subsetOfTHREE = {
     MOUSE,
     Vector2,
@@ -43437,6 +43647,12 @@ const subsetOfTHREE = {
   
 // 2 The Object
 
+    const boxGeometry = new BoxGeometry();
+    const material = new MeshNormalMaterial({transparent: true});
+    const cube = new Mesh(boxGeometry, material);
+    cube.position.z = 3;
+    scene.add(cube);
+    cube.castShadow = true;
 
 
 // 3 The Camera
@@ -43474,7 +43690,7 @@ const subsetOfTHREE = {
             ARROW_RIGHT: 39,
             ARROW_DOWN : 40,
         };
-        
+
         const wKey = new holdEvent.KeyboardKeyHold( KEYCODE.W, 16.666 );
         const aKey = new holdEvent.KeyboardKeyHold( KEYCODE.A, 16.666 );
         const sKey = new holdEvent.KeyboardKeyHold( KEYCODE.S, 16.666 );
@@ -43500,7 +43716,7 @@ const subsetOfTHREE = {
 
     // 3.5 Add the camera to the scene
     scene.add(camera);
-  
+
 // 4 The Renderer
 
     const renderer = new WebGLRenderer({
@@ -43601,15 +43817,6 @@ function animate() {
 animate();
 
 // Picking
-
-const boxGeometry = new BoxGeometry();
-const material = new MeshNormalMaterial();
-const cube = new Mesh(boxGeometry, material);
-cube.position.x = -10;
-scene.add(cube);
-cube.castShadow = true;
-
-
 
 const raycaster = new Raycaster();
 const mouse = new Vector2();
@@ -43831,3 +44038,14 @@ function restorePreviousSelection() {
             (error) => {
                 console.log(error);
             });
+
+// Drag Controls
+const controls = new DragControls([cube], camera, renderer.domElement);
+controls.addEventListener('dragstart', function (event) {
+    event.object.material.opacity = 0.5;
+    cameraControls.enabled = false;
+});
+controls.addEventListener('dragend', function (event) {
+    event.object.material.opacity = 1;
+    cameraControls.enabled = true;
+});
