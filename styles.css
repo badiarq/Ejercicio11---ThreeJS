@@ -193,6 +193,10 @@ body {
     background-image: url("./img/icon-colored.png");
 }
 
+#deleteMeasurements{
+    background-image: url("./img/icon-removeMeasurements.png");
+}
+
 .bimViewer {
     display: flex;
     flex-direction: row;
@@ -219,7 +223,7 @@ body {
     flex-direction: row;
     justify-content: space-around;
     font-size: 14px;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     border: 1px solid gainsboro;
     border-radius: 10px;
     height: 25px;
@@ -271,7 +275,6 @@ body {
     left: 0;
     top: 0;
     display: block;
-    /* z-index: -1; */
     overflow: hidden;
     border-radius: var(--coverRadius);
 }
@@ -412,4 +415,12 @@ transform: translate(1rem, 0);
    
 button:hover .button-text {
 color: #fff;
+}
+
+.measurementLabel {
+    background-color: #d9d5e7d1;
+    color: var(--darkColor);
+    font-size: 14px;
+    padding: 0 0.5rem;
+    border-radius: 0.5rem;
 }

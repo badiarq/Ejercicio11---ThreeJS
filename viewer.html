@@ -62,10 +62,16 @@
                                 <p>arrow keys (left, right, up, down) to rotate</p>
                             </div>
                         </div>
+                        <div class="row">
+                            <div id="measures-description" class="viewer-description col-12">
+                                <p>Press "CTRL" button to measure a distance between 2 elements (click + Drag + click)</p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Model Viewer -->
                     <div id="viewer-container" class="bimViewer">
+                        <div id="canvas-label"></div>
                         <canvas id="three-canvas"></canvas>
                     </div>
 
@@ -75,25 +81,28 @@
                             <div class="tools-container col-12">
                                 <div class="buttons-container ">
                                     <div class="button-item">
-                                        <button id="fit-view" class="tool-button"></button>
+                                        <button id="fit-view" class="tool-button" title="Fit All Model in Screen"></button>
                                     </div>
                                     <div class="button-item">
-                                        <button id="left-view" class="tool-button"></button>
+                                        <button id="left-view" class="tool-button" title="Left-side View"></button>
                                     </div>
                                     <div class="button-item">
-                                        <button id="front-view" class="tool-button"></button>
+                                        <button id="front-view" class="tool-button" title="Front-side View"></button>
                                     </div>
                                     <div class="button-item">
-                                        <button id="right-view" class="tool-button"></button>
+                                        <button id="right-view" class="tool-button" title="Right-side View"></button>
                                     </div>
                                     <div class="button-item">
-                                        <button id="back-view" class="tool-button"></button>
+                                        <button id="back-view" class="tool-button" title="Back-side View"></button>
                                     </div>
                                     <div class="button-item">
-                                        <button id="wireframe-view" class="tool-button"></button>
+                                        <button id="wireframe-view" class="tool-button" title="Wireframe View"></button>
                                     </div>
                                     <div class="button-item">
-                                        <button id="colored-view" class="tool-button"></button>
+                                        <button id="colored-view" class="tool-button" title="Textured View"></button>
+                                    </div>
+                                    <div class="button-item">
+                                        <button id="deleteMeasurements" class="tool-button" title="Remove Measurements"></button>
                                     </div>
                                 </div>
                             </div>

@@ -43608,6 +43608,209 @@ class DragControls extends EventDispatcher$1 {
 
 }
 
+class CSS2DObject extends Object3D {
+
+	constructor( element = document.createElement( 'div' ) ) {
+
+		super();
+
+		this.isCSS2DObject = true;
+
+		this.element = element;
+
+		this.element.style.position = 'absolute';
+		this.element.style.userSelect = 'none';
+
+		this.element.setAttribute( 'draggable', false );
+
+		this.addEventListener( 'removed', function () {
+
+			this.traverse( function ( object ) {
+
+				if ( object.element instanceof Element && object.element.parentNode !== null ) {
+
+					object.element.parentNode.removeChild( object.element );
+
+				}
+
+			} );
+
+		} );
+
+	}
+
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		this.element = source.element.cloneNode( true );
+
+		return this;
+
+	}
+
+}
+
+//
+
+const _vector = new Vector3();
+const _viewMatrix = new Matrix4();
+const _viewProjectionMatrix = new Matrix4();
+const _a = new Vector3();
+const _b = new Vector3();
+
+class CSS2DRenderer {
+
+	constructor( parameters = {} ) {
+
+		const _this = this;
+
+		let _width, _height;
+		let _widthHalf, _heightHalf;
+
+		const cache = {
+			objects: new WeakMap()
+		};
+
+		const domElement = parameters.element !== undefined ? parameters.element : document.createElement( 'div' );
+
+		domElement.style.overflow = 'hidden';
+
+		this.domElement = domElement;
+
+		this.getSize = function () {
+
+			return {
+				width: _width,
+				height: _height
+			};
+
+		};
+
+		this.render = function ( scene, camera ) {
+
+			if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
+			if ( camera.parent === null ) camera.updateMatrixWorld();
+
+			_viewMatrix.copy( camera.matrixWorldInverse );
+			_viewProjectionMatrix.multiplyMatrices( camera.projectionMatrix, _viewMatrix );
+
+			renderObject( scene, scene, camera );
+			zOrder( scene );
+
+		};
+
+		this.setSize = function ( width, height ) {
+
+			_width = width;
+			_height = height;
+
+			_widthHalf = _width / 2;
+			_heightHalf = _height / 2;
+
+			domElement.style.width = width + 'px';
+			domElement.style.height = height + 'px';
+
+		};
+
+		function renderObject( object, scene, camera ) {
+
+			if ( object.isCSS2DObject ) {
+
+				_vector.setFromMatrixPosition( object.matrixWorld );
+				_vector.applyMatrix4( _viewProjectionMatrix );
+
+				const visible = ( object.visible === true ) && ( _vector.z >= - 1 && _vector.z <= 1 ) && ( object.layers.test( camera.layers ) === true );
+				object.element.style.display = ( visible === true ) ? '' : 'none';
+
+				if ( visible === true ) {
+
+					object.onBeforeRender( _this, scene, camera );
+
+					const element = object.element;
+
+					element.style.transform = 'translate(-50%,-50%) translate(' + ( _vector.x * _widthHalf + _widthHalf ) + 'px,' + ( - _vector.y * _heightHalf + _heightHalf ) + 'px)';
+
+					if ( element.parentNode !== domElement ) {
+
+						domElement.appendChild( element );
+
+					}
+
+					object.onAfterRender( _this, scene, camera );
+
+				}
+
+				const objectData = {
+					distanceToCameraSquared: getDistanceToSquared( camera, object )
+				};
+
+				cache.objects.set( object, objectData );
+
+			}
+
+			for ( let i = 0, l = object.children.length; i < l; i ++ ) {
+
+				renderObject( object.children[ i ], scene, camera );
+
+			}
+
+		}
+
+		function getDistanceToSquared( object1, object2 ) {
+
+			_a.setFromMatrixPosition( object1.matrixWorld );
+			_b.setFromMatrixPosition( object2.matrixWorld );
+
+			return _a.distanceToSquared( _b );
+
+		}
+
+		function filterAndFlatten( scene ) {
+
+			const result = [];
+
+			scene.traverse( function ( object ) {
+
+				if ( object.isCSS2DObject ) result.push( object );
+
+			} );
+
+			return result;
+
+		}
+
+		function zOrder( scene ) {
+
+			const sorted = filterAndFlatten( scene ).sort( function ( a, b ) {
+
+				if ( a.renderOrder !== b.renderOrder ) {
+
+					return b.renderOrder - a.renderOrder;
+
+				}
+
+				const distanceA = cache.objects.get( a ).distanceToCameraSquared;
+				const distanceB = cache.objects.get( b ).distanceToCameraSquared;
+
+				return distanceA - distanceB;
+
+			} );
+
+			const zMax = sorted.length;
+
+			for ( let i = 0, l = sorted.length; i < l; i ++ ) {
+
+				sorted[ i ].element.style.zIndex = zMax - i;
+
+			}
+
+		}
+
+	}
+
+}
+
 const subsetOfTHREE = {
     MOUSE,
     Vector2,
@@ -43626,6 +43829,7 @@ const subsetOfTHREE = {
   };
   
   const canvas = document.getElementById("three-canvas");
+  const labelCanvas = document.getElementById("canvas-label");
   
 // 1 The scene
 
@@ -43718,17 +43922,23 @@ const subsetOfTHREE = {
     scene.add(camera);
 
 // 4 The Renderer
-
+    // WebGL Renderer
     const renderer = new WebGLRenderer({
         canvas: canvas,
     });
-    
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
+
+    // Label Renderer
+    const labelRenderer = new CSS2DRenderer({
+        canvas: canvas,
+    });
+    labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    labelCanvas.appendChild(labelRenderer.domElement);
   
 // 5 Lights
   
@@ -43775,6 +43985,7 @@ const subsetOfTHREE = {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
     });
 
 // 7 Stats 
@@ -43806,6 +44017,8 @@ function animate() {
     requestAnimationFrame(animate);
     //render Scene and camera
     renderer.render( scene, camera );
+    //render label renderer
+    labelRenderer.render(scene, camera);
     
     // update shadow Size
     updateShadowMapSize();
@@ -43837,8 +44050,8 @@ const previousSelection = {
 
 // Get Mouse position
 window.addEventListener('mousemove', (event) => {
-    mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-    mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+    mouse.x = event.clientX / renderer.domElement.clientWidth * 2 - 1;
+    mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
 // Picking
     // raycaster.setFromCamera(mouse, camera);
@@ -43850,7 +44063,7 @@ window.addEventListener('mousemove', (event) => {
         },
         camera
     );
-    const intersections = raycaster.intersectObjects(objectsToPick);
+    const intersections = raycaster.intersectObjects(pickableObjects);
     
     // intersection between mouse and material
     const hasCollided = intersections.length !== 0 ;
@@ -43945,7 +44158,7 @@ function restorePreviousSelection() {
         // Get the loader text from html
         const progressText = document.getElementById('progress-text');
 
-        const objectsToPick = [];
+        const pickableObjects = [];
 
         // Load the file
         loader.load( '/Items/house/scene.gltf',
@@ -44061,10 +44274,26 @@ function restorePreviousSelection() {
                         }
                     };
 
+                    // Remove measurements
+                    const deleteMeasurementsButton = document.getElementById("deleteMeasurements");
+                    deleteMeasurementsButton.onclick = () => {
+                        let e = document.querySelectorAll(".measurementLabel");
+                        e.forEach(tag => {
+                            tag.innerHTML = "";
+                        });
+                        scene.traverse( function(child) {
+                            if (child.isLineSegments) {
+                                if (child.name == 'measurementLine') {
+                                    scene.remove(child);
+                                }
+                            }
+                        });
+                    };
+
                 // Objects we want to pick
                 gltf.scene.traverse( function(node) {
                     if (node.isMesh){
-                        objectsToPick.push(node);
+                        pickableObjects.push(node);
                     }
                 });
 
@@ -44079,12 +44308,139 @@ function restorePreviousSelection() {
             });
 
 // Drag Controls
-const controls = new DragControls([cube], camera, renderer.domElement);
-controls.addEventListener('dragstart', function (event) {
-    event.object.material.opacity = 0.5;
-    cameraControls.enabled = false;
-});
-controls.addEventListener('dragend', function (event) {
-    event.object.material.opacity = 1;
-    cameraControls.enabled = true;
-});
+    const controls = new DragControls([cube], camera, renderer.domElement);
+    controls.addEventListener('dragstart', function (event) {
+        event.object.material.opacity = 0.5;
+        cameraControls.enabled = false;
+    });
+    controls.addEventListener('dragend', function (event) {
+        event.object.material.opacity = 1;
+        cameraControls.enabled = true;
+    });
+
+// Measurement Tool
+    let ctrlDown = false;
+    let lineId = 0;
+    let line = Line;
+    let drawingLine = false;
+    const measurementLabels = {};
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Control') {
+            ctrlDown = true;
+            cameraControls.enabled = false;
+            renderer.domElement.style.cursor = 'crosshair';
+        }
+    });
+
+    window.addEventListener('keyup', function (event) {
+        if (event.key === 'Control') {
+            ctrlDown = false;
+            cameraControls.enabled = true;
+            renderer.domElement.style.cursor = 'pointer';
+            if (drawingLine) {
+                //delete the last line because it wasn't committed
+                scene.remove(line);
+                scene.remove(measurementLabels[lineId]);
+                drawingLine = false;
+            }
+        }
+    });
+
+    renderer.domElement.addEventListener('pointerdown', onClick, false);
+    function onClick() {
+        if (ctrlDown) {
+            let canvasBounds = canvas.getBoundingClientRect();
+            raycaster.setFromCamera(
+                {
+                    x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+                    y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+                },
+                camera
+            );
+            intersects = raycaster.intersectObjects(pickableObjects, false);
+            if (intersects.length > 0) {
+                if (!drawingLine) {
+                    //start the line
+                    const points = [];
+                    points.push(intersects[0].point);
+                    points.push(intersects[0].point.clone());
+                    const geometry = new BufferGeometry().setFromPoints(
+                        points
+                    );
+                    line = new LineSegments(
+                        geometry,
+                        new LineBasicMaterial({
+                            color: 0xffffff,
+                            transparent: true,
+                            opacity: 0.75,
+                        })
+                    );
+                    line.name = 'measurementLine';
+                    line.frustumCulled = false;
+                    scene.add(line);
+
+                    const measurementDiv = document.createElement(
+                        'div'
+                    );
+                    measurementDiv.className = 'measurementLabel';
+                    measurementDiv.innerText = '0.0m';
+                    const measurementLabel = new CSS2DObject(measurementDiv);
+                    measurementLabel.position.copy(intersects[0].point);
+                    measurementLabels[lineId] = measurementLabel;
+                    scene.add(measurementLabels[lineId]);
+                    drawingLine = true;
+                } else {
+                    //finish the line
+                    const positions = line.geometry.attributes.position.array;
+                    positions[3] = intersects[0].point.x;
+                    positions[4] = intersects[0].point.y;
+                    positions[5] = intersects[0].point.z;
+                    line.geometry.attributes.position.needsUpdate = true;
+                    lineId++;
+                    drawingLine = false;
+                }
+            }
+        }
+    }
+
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    function onDocumentMouseMove(event) {
+        event.preventDefault();
+
+
+        mouse.x = event.clientX / renderer.domElement.clientWidth * 2 - 1;
+        mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+        if (drawingLine) {
+            let canvasBounds = canvas.getBoundingClientRect();
+            raycaster.setFromCamera(
+                {
+                    x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+                    y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+                },
+                camera
+            );
+            intersects = raycaster.intersectObjects(pickableObjects, false);
+            if (intersects.length > 0) {
+                const positions = line.geometry.attributes.position.array;
+                const v0 = new Vector3(
+                    positions[0],
+                    positions[1],
+                    positions[2]
+                );
+                const v1 = new Vector3(
+                    intersects[0].point.x,
+                    intersects[0].point.y,
+                    intersects[0].point.z
+                );
+                positions[3] = intersects[0].point.x;
+                positions[4] = intersects[0].point.y;
+                positions[5] = intersects[0].point.z;
+                line.geometry.attributes.position.needsUpdate = true;
+                const distance = v0.distanceTo(v1);
+                measurementLabels[lineId].element.innerText = distance.toFixed(2) + 'm';
+                measurementLabels[lineId].position.lerpVectors(v0, v1, 0.5);
+            }
+        }
+    }

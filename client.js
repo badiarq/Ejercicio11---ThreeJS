@@ -8,6 +8,10 @@ import CameraControls from 'camera-controls';
 import { index } from 'hold-event/dist/hold-event.min.js'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import {
+    CSS2DRenderer,
+    CSS2DObject,
+} from 'three/examples/jsm/renderers/CSS2DRenderer'
+import {
     Scene,
     BoxGeometry,
     MeshBasicMaterial,
@@ -36,6 +40,7 @@ import {
     BufferGeometryLoader,
     SpotLight
   } from "three";
+import { Line } from 'three';
   
   const subsetOfTHREE = {
     MOUSE,
@@ -55,6 +60,7 @@ import {
   };
   
   const canvas = document.getElementById("three-canvas");
+  const labelCanvas = document.getElementById("canvas-label");
   
 // 1 The scene
 
@@ -147,17 +153,23 @@ import {
     scene.add(camera);
 
 // 4 The Renderer
-
+    // WebGL Renderer
     const renderer = new WebGLRenderer({
         canvas: canvas,
     });
-    
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
-
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Label Renderer
+    const labelRenderer = new CSS2DRenderer({
+        canvas: canvas,
+    });
+    labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight)
+    labelRenderer.domElement.style.position = 'absolute'
+    labelRenderer.domElement.style.pointerEvents = 'none'
+    labelCanvas.appendChild(labelRenderer.domElement)
   
 // 5 Lights
   
@@ -204,6 +216,7 @@ import {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight)
     });
 
 // 7 Stats 
@@ -235,6 +248,8 @@ function animate() {
     requestAnimationFrame(animate);
     //render Scene and camera
     renderer.render( scene, camera );
+    //render label renderer
+    labelRenderer.render(scene, camera);
     
     // update shadow Size
     updateShadowMapSize()
@@ -266,8 +281,8 @@ const previousSelection = {
 
 // Get Mouse position
 window.addEventListener('mousemove', (event) => {
-    mouse.x = event.clientX / canvas.clientWidth * 2 - 1;
-    mouse.y = - (event.clientY / canvas.clientHeight) * 2 + 1;
+    mouse.x = event.clientX / renderer.domElement.clientWidth * 2 - 1;
+    mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
 // Picking
     // raycaster.setFromCamera(mouse, camera);
@@ -279,7 +294,7 @@ window.addEventListener('mousemove', (event) => {
         },
         camera
     )
-    const intersections = raycaster.intersectObjects(objectsToPick);
+    const intersections = raycaster.intersectObjects(pickableObjects);
     
     // intersection between mouse and material
     const hasCollided = intersections.length !== 0 ;
@@ -374,7 +389,7 @@ function restorePreviousSelection() {
         // Get the loader text from html
         const progressText = document.getElementById('progress-text');
 
-        const objectsToPick = [];
+        const pickableObjects = [];
 
         // Load the file
         loader.load( '/Items/house/scene.gltf',
@@ -491,10 +506,26 @@ function restorePreviousSelection() {
                         }
                     }
 
+                    // Remove measurements
+                    const deleteMeasurementsButton = document.getElementById("deleteMeasurements");
+                    deleteMeasurementsButton.onclick = () => {
+                        let e = document.querySelectorAll(".measurementLabel");
+                        e.forEach(tag => {
+                            tag.innerHTML = "";
+                        });
+                        scene.traverse( function(child) {
+                            if (child.isLineSegments) {
+                                if (child.name == 'measurementLine') {
+                                    scene.remove(child)
+                                }
+                            }
+                        });
+                    }
+
                 // Objects we want to pick
                 gltf.scene.traverse( function(node) {
                     if (node.isMesh){
-                        objectsToPick.push(node);
+                        pickableObjects.push(node);
                     }
                 });
 
@@ -509,12 +540,139 @@ function restorePreviousSelection() {
             })
 
 // Drag Controls
-const controls = new DragControls([cube], camera, renderer.domElement)
-controls.addEventListener('dragstart', function (event) {
-    event.object.material.opacity = 0.5;
-    cameraControls.enabled = false;
-})
-controls.addEventListener('dragend', function (event) {
-    event.object.material.opacity = 1
-    cameraControls.enabled = true;
-})
+    const controls = new DragControls([cube], camera, renderer.domElement)
+    controls.addEventListener('dragstart', function (event) {
+        event.object.material.opacity = 0.5;
+        cameraControls.enabled = false;
+    })
+    controls.addEventListener('dragend', function (event) {
+        event.object.material.opacity = 1
+        cameraControls.enabled = true;
+    })
+
+// Measurement Tool
+    let ctrlDown = false
+    let lineId = 0
+    let line = Line
+    let drawingLine = false
+    const measurementLabels = {}
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Control') {
+            ctrlDown = true
+            cameraControls.enabled = false
+            renderer.domElement.style.cursor = 'crosshair'
+        }
+    })
+
+    window.addEventListener('keyup', function (event) {
+        if (event.key === 'Control') {
+            ctrlDown = false
+            cameraControls.enabled = true
+            renderer.domElement.style.cursor = 'pointer'
+            if (drawingLine) {
+                //delete the last line because it wasn't committed
+                scene.remove(line)
+                scene.remove(measurementLabels[lineId])
+                drawingLine = false
+            }
+        }
+    })
+
+    renderer.domElement.addEventListener('pointerdown', onClick, false)
+    function onClick() {
+        if (ctrlDown) {
+            let canvasBounds = canvas.getBoundingClientRect()
+            raycaster.setFromCamera(
+                {
+                    x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+                    y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+                },
+                camera
+            )
+            intersects = raycaster.intersectObjects(pickableObjects, false)
+            if (intersects.length > 0) {
+                if (!drawingLine) {
+                    //start the line
+                    const points = []
+                    points.push(intersects[0].point)
+                    points.push(intersects[0].point.clone())
+                    const geometry = new THREE.BufferGeometry().setFromPoints(
+                        points
+                    )
+                    line = new THREE.LineSegments(
+                        geometry,
+                        new THREE.LineBasicMaterial({
+                            color: 0xffffff,
+                            transparent: true,
+                            opacity: 0.75,
+                        })
+                    )
+                    line.name = 'measurementLine'
+                    line.frustumCulled = false
+                    scene.add(line)
+
+                    const measurementDiv = document.createElement(
+                        'div'
+                    )
+                    measurementDiv.className = 'measurementLabel'
+                    measurementDiv.innerText = '0.0m'
+                    const measurementLabel = new CSS2DObject(measurementDiv)
+                    measurementLabel.position.copy(intersects[0].point)
+                    measurementLabels[lineId] = measurementLabel
+                    scene.add(measurementLabels[lineId])
+                    drawingLine = true
+                } else {
+                    //finish the line
+                    const positions = line.geometry.attributes.position.array
+                    positions[3] = intersects[0].point.x
+                    positions[4] = intersects[0].point.y
+                    positions[5] = intersects[0].point.z
+                    line.geometry.attributes.position.needsUpdate = true
+                    lineId++
+                    drawingLine = false
+                }
+            }
+        }
+    }
+
+    document.addEventListener('mousemove', onDocumentMouseMove, false)
+    function onDocumentMouseMove(event) {
+        event.preventDefault()
+
+
+        mouse.x = event.clientX / renderer.domElement.clientWidth * 2 - 1;
+        mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+        if (drawingLine) {
+            let canvasBounds = canvas.getBoundingClientRect()
+            raycaster.setFromCamera(
+                {
+                    x: ((event.clientX - canvasBounds.left) / renderer.domElement.clientWidth) * 2 - 1,
+                    y: -((event.clientY - canvasBounds.top) / renderer.domElement.clientHeight) * 2 + 1,
+                },
+                camera
+            )
+            intersects = raycaster.intersectObjects(pickableObjects, false)
+            if (intersects.length > 0) {
+                const positions = line.geometry.attributes.position.array
+                const v0 = new THREE.Vector3(
+                    positions[0],
+                    positions[1],
+                    positions[2]
+                )
+                const v1 = new THREE.Vector3(
+                    intersects[0].point.x,
+                    intersects[0].point.y,
+                    intersects[0].point.z
+                )
+                positions[3] = intersects[0].point.x
+                positions[4] = intersects[0].point.y
+                positions[5] = intersects[0].point.z
+                line.geometry.attributes.position.needsUpdate = true
+                const distance = v0.distanceTo(v1)
+                measurementLabels[lineId].element.innerText = distance.toFixed(2) + 'm';
+                measurementLabels[lineId].position.lerpVectors(v0, v1, 0.5);
+            }
+        }
+    }
