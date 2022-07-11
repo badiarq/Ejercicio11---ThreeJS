@@ -43751,6 +43751,7 @@ const subsetOfTHREE = {
     light1.shadow.mapSize.height = 512;
     light1.shadow.camera.near = 0.5;
     light1.shadow.camera.far = 200;
+    // light1.shadow.bias = 0.02;
 
     const data = {
         color: light1.color.getHex(0x000000),
@@ -43964,11 +43965,15 @@ function restorePreviousSelection() {
                 HousePositionFolder.add(gltf.scene.position, 'z', -100, 100, 1);
 
                 // Receive lights and display a shadow for the gltf objects
-                gltf.scene.traverse( function(node) {
-                    if (node.isMesh){
-                        node.castShadow = true; 
-                        node.receiveShadow = true;
+                gltf.scene.traverse( function(child) {
+                    if (child.isMesh){
+                        child.castShadow = true; 
+                        child.receiveShadow = true;
                     }
+                    // if (child.isLight) {
+                    //     child.castShadow = true;
+                    //     child.shadow.biad = -.003;
+                    // }
                 });
 
                 // Add the loader symbol
