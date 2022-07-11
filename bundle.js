@@ -44029,15 +44029,36 @@ function restorePreviousSelection() {
                         color: 0x222222,
                         wireframe: true,
                     });
+                    let originalMaterials = {};
                     wireframeViewButton.onclick = () => {
-                        scene.traverse( function(child) {
-                            if (child.isMesh){
-                                child.material = wireframeMaterial;
-                            }
-                            if (child.isPlane){
-                                child.material = wireframeMaterial;
-                            }
-                        });
+                        if (Object.keys(originalMaterials).length === 0) {
+                            scene.traverse( function(child) {
+                                if (child.isMesh){
+                                    originalMaterials[child.name] = child.material;
+                                    child.material = wireframeMaterial;
+                                }
+                                if (child.isPlane){
+                                    originalMaterials[child.name] = child.material;                                
+                                    child.material = wireframeMaterial;
+                                }
+                            });
+                        }
+                    };
+
+                    // Colored View
+                    const coloredViewButton = document.getElementById("colored-view");
+                    coloredViewButton.onclick = () => {
+                        if (Object.keys(originalMaterials).length !== 0) {
+                            scene.traverse( function(child) {
+                                if (child.isMesh){
+                                    child.material = originalMaterials[child.name];
+                                }
+                                if (child.isPlane){
+                                    child.material = originalMaterials[child.name];                               
+                                }
+                            });
+                            originalMaterials = {} ;
+                        }
                     };
 
                 // Objects we want to pick
