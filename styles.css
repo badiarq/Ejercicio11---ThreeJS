@@ -185,6 +185,14 @@ body {
     background-image: url("./img/icon-back.png");
 }
 
+#wireframe-view {
+    background-image: url("./img/icon-wireframe.png");
+}
+
+#colored-view {
+    background-image: url("./img/icon-colored.png");
+}
+
 .bimViewer {
     display: flex;
     flex-direction: row;

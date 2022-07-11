@@ -399,10 +399,6 @@ function restorePreviousSelection() {
                         child.castShadow = true; 
                         child.receiveShadow = true;
                     }
-                    // if (child.isLight) {
-                    //     child.castShadow = true;
-                    //     child.shadow.biad = -.003;
-                    // }
                 });
 
                 // Add the loader symbol
@@ -455,6 +451,23 @@ function restorePreviousSelection() {
                     backViewButton.onclick = () => {
                         cameraControls.setLookAt(0, 2.7, -20, 0, 0, 0);
                         cameraControls.fitToBox(model3D[0], true, {paddingTop:2.7, paddingLeft: 0, paddingBottom:0, paddingRight:0});
+                    }
+
+                    // Wireframe View
+                    const wireframeViewButton = document.getElementById("wireframe-view");
+                    const wireframeMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x222222,
+                        wireframe: true,
+                    })
+                    wireframeViewButton.onclick = () => {
+                        scene.traverse( function(child) {
+                            if (child.isMesh){
+                                child.material = wireframeMaterial;
+                            }
+                            if (child.isPlane){
+                                child.material = wireframeMaterial;
+                            }
+                        });
                     }
 
                 // Objects we want to pick
